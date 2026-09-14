@@ -1,0 +1,4 @@
+/devops-camp
+*.log
+.env
+.DS_Store
