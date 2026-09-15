@@ -28,6 +28,8 @@ DevOpsキャンプ最終課題として開発する、見積もり振り返り�
 - `internal/handlers` — 各エンドポイントのハンドラ
 - `schema.sql` — テーブル定義(DB仕様書に対応)
 
+各ファイルの詳しい解説は[docs/code-walkthrough/](./docs/code-walkthrough/README.md)を参照。
+
 ---
 
 ## Step 1-2 (テーマ選定・API/DB仕様書)
