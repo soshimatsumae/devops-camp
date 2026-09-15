@@ -40,3 +40,10 @@ func UserIDFromContext(ctx context.Context) (int64, bool) {
 	userID, ok := ctx.Value(userIDKey).(int64)
 	return userID, ok
 }
+
+// ContextWithUserID returns a copy of ctx carrying userID as the authenticated
+// user, as RequireAuth would after validating a token. Exported for tests that
+// call handlers directly without going through the RequireAuth middleware.
+func ContextWithUserID(ctx context.Context, userID int64) context.Context {
+	return context.WithValue(ctx, userIDKey, userID)
+}

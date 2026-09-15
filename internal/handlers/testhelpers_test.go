@@ -79,6 +79,11 @@ func newAuthedRequest(t *testing.T, secret []byte, userID int64, method, target 
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
+
+	// Tests call handlers directly rather than through the RequireAuth
+	// middleware, so inject the authenticated user into the context the
+	// same way the middleware would after validating the token above.
+	req = req.WithContext(auth.ContextWithUserID(req.Context(), userID))
 	return req
 }
 
