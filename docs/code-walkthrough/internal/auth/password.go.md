@@ -1,6 +1,6 @@
 # internal/auth/password.go
 
-`bcrypt`のラッパーのみの2関数構成([ADR-0005](../../adr/0005-bcrypt-password-hashing.md))。
+`bcrypt`のラッパーのみの2関数構成([ADR-0005](../../../adr/0005-bcrypt-password-hashing.md))。
 
 ## やっていること
 

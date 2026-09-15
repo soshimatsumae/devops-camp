@@ -14,6 +14,6 @@
 
 ## 読むときのポイント
 
-- `net/http`のみで実装する制約([ADR-0002](../../adr/0002-net-http-only.md))の中で、ミドルウェアチェインを「`http.HandlerFunc`を受け取って`http.HandlerFunc`を返す関数」として自前実装している。`main.go`では`requireAuth(taskHandler.List)`のように使う
+- `net/http`のみで実装する制約([ADR-0002](../../../adr/0002-net-http-only.md))の中で、ミドルウェアチェインを「`http.HandlerFunc`を受け取って`http.HandlerFunc`を返す関数」として自前実装している。`main.go`では`requireAuth(taskHandler.List)`のように使う
 - `ContextWithUserID`は本体のロジックには使われず、テストコード(`internal/handlers/testhelpers_test.go`)専用の後付けexport。ハンドラを`RequireAuth`でラップせず直接呼ぶユニットテストのために、ミドルウェアが本来やる「コンテキストへのユーザーID注入」を代替している
 - 認証失敗時のエラーコードは常に文字列`"UNAUTHORIZED"`で統一されており、ヘッダー欠落・トークン無効・期限切れを区別しない(`jwt.go`の設計方針と同じ)

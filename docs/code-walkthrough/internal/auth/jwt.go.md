@@ -1,6 +1,6 @@
 # internal/auth/jwt.go
 
-JWTの発行と検証([ADR-0004](../../adr/0004-jwt-auth.md))。
+JWTの発行と検証([ADR-0004](../../../adr/0004-jwt-auth.md))。
 
 ## やっていること
 

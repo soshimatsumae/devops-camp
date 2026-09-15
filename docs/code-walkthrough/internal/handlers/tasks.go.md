@@ -21,7 +21,7 @@
 ### `Create` (`POST /tasks`)
 
 - `title`必須(トリム後空文字はNG)、`estimated_weight`必須(nilなら`422 ESTIMATED_WEIGHT_REQUIRED`)
-- `parent_id`指定時は、そのタスクが存在し**かつ自分の所有物であること**をSELECTで確認してから作成([ADR-0007](../../adr/0007-self-referencing-task-hierarchy.md))
+- `parent_id`指定時は、そのタスクが存在し**かつ自分の所有物であること**をSELECTで確認してから作成([ADR-0007](../../../adr/0007-self-referencing-task-hierarchy.md))
 - 作成後は`loadTask`で読み直してから返す(DBのデフォルト値やAUTO_INCREMENTのIDを含めて正確なレスポンスを作るため)
 
 ### `Get` (`GET /tasks/{id}`)
@@ -33,7 +33,7 @@
 ### `Update` (`PATCH /tasks/{id}`)
 
 - 送られてきたフィールドだけを動的にSET句に組み込む部分更新(PATCHセマンティクス)
-- `status`を`done`に変更する瞬間(`completingNow`)だけ`actual_weight`必須というビジネスルールを強制し([ADR-0008](../../adr/0008-separate-estimated-actual-weight.md))、同時に`completed_at`を現在時刻で自動セットする
+- `status`を`done`に変更する瞬間(`completingNow`)だけ`actual_weight`必須というビジネスルールを強制し([ADR-0008](../../../adr/0008-separate-estimated-actual-weight.md))、同時に`completed_at`を現在時刻で自動セットする
 - 既に`done`のタスクを再度`done`にしても`completingNow`は`false`になる(`existing.Status != models.StatusDone`の条件があるため、`completed_at`が上書きされない)
 
 ### `Delete` (`DELETE /tasks/{id}`)
@@ -44,7 +44,7 @@
 ### `Calendar` (`GET /tasks/calendar`)
 
 - `parseCalendarRange`で`from`/`to`を解決(下記参照)
-- `completed_at`の日付でGROUP BYし、`actual_weight`の合計を日別に集計して返す([ADR-0010](../../adr/0010-calendar-date-range-params.md))
+- `completed_at`の日付でGROUP BYし、`actual_weight`の合計を日別に集計して返す([ADR-0010](../../../adr/0010-calendar-date-range-params.md))
 
 ## `parseCalendarRange`
 

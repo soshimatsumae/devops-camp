@@ -1,6 +1,6 @@
 # internal/handlers/auth.go
 
-`AuthHandler`が`POST /auth/register`と`POST /auth/login`を実装する([docs/API_SPEC.md](../../API_SPEC.md)のAUTH-01/02に対応)。
+`AuthHandler`が`POST /auth/register`と`POST /auth/login`を実装する([docs/API_SPEC.md](../../../API_SPEC.md)のAUTH-01/02に対応)。
 
 ## やっていること
 
