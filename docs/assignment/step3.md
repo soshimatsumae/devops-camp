@@ -75,6 +75,20 @@ curl -s http://localhost:8080/tasks -H "Authorization: Bearer $TOKEN"
 {"data":[{"id":3,"parent_id":null,"title":"ER図を作成する","description":null,"status":"todo","estimated_weight":3,"actual_weight":null,"due_date":null,"completed_at":null,"created_at":"2026-09-15T12:43:19Z","updated_at":"2026-09-15T12:43:19Z"},{"id":2,"parent_id":null,"title":"ER図を作成する","description":null,"status":"todo","estimated_weight":3,"actual_weight":null,"due_date":null,"completed_at":null,"created_at":"2026-09-15T11:07:54Z","updated_at":"2026-09-15T11:07:54Z"},{"id":1,"parent_id":null,"title":"ER図を作成する","description":null,"status":"done","estimated_weight":3,"actual_weight":4,"due_date":null,"completed_at":"2026-09-15T02:08:06Z","created_at":"2026-09-15T11:07:49Z","updated_at":"2026-09-15T11:08:05Z"}],"meta":{"page":1,"per_page":20,"total_count":3,"total_pages":1}}
 ```
 
+`per_page`を指定して1件ずつページ送りできることも確認(この時点でタスクは3件)。
+
+```sh
+curl -s "http://localhost:8080/tasks?per_page=1&page=1" -H "Authorization: Bearer $TOKEN"
+curl -s "http://localhost:8080/tasks?per_page=1&page=2" -H "Authorization: Bearer $TOKEN"
+```
+
+```json
+{"data":[{"id":4,"parent_id":null,"title":"異常系テスト用タスク","description":null,"status":"todo","estimated_weight":2,"actual_weight":null,"due_date":null,"completed_at":null,"created_at":"2026-09-17T11:29:29Z","updated_at":"2026-09-17T11:29:29Z"}],"meta":{"page":1,"per_page":1,"total_count":3,"total_pages":3}}
+{"data":[{"id":2,"parent_id":null,"title":"ER図を作成する","description":null,"status":"todo","estimated_weight":3,"actual_weight":null,"due_date":null,"completed_at":null,"created_at":"2026-09-15T11:07:54Z","updated_at":"2026-09-15T11:07:54Z"}],"meta":{"page":2,"per_page":1,"total_count":3,"total_pages":3}}
+```
+
+`page=1`と`page=2`で異なる1件ずつが返り、`meta.total_pages`が3(タスク3件 ÷ per_page 1)になっていることから、ページネーションが正しく機能していることを確認できる。
+
 ### TASK-04: タスク更新 (`PATCH /tasks/{id}`)
 
 id=3を完了状態に更新する。
@@ -112,6 +126,19 @@ curl -s http://localhost:8080/tasks/calendar -H "Authorization: Bearer $TOKEN"
 ```json
 {"data":[{"date":"2026-09-15T00:00:00Z","total_weight":8}]}
 ```
+
+Step2レビューで追加した`from`/`to`を指定した場合の動作も確認([ADR-0010](../adr/0010-calendar-date-range-params.md))。
+
+```sh
+curl -s "http://localhost:8080/tasks/calendar?from=2026-09-01&to=2026-09-30" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+```json
+{"data":[{"date":"2026-09-15T00:00:00Z","total_weight":4}]}
+```
+
+指定した期間(9月1日〜9月30日)に絞り込まれ、この時点で完了していたタスク1件分(重さ4)の集計が返っている。
 
 ### TASK-05: タスク削除 (`DELETE /tasks/{id}`)
 
