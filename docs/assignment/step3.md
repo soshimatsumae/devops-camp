@@ -137,6 +137,54 @@ curl -s http://localhost:8080/tasks/3 -H "Authorization: Bearer $TOKEN" -w "\nHT
 HTTP status: 404
 ```
 
+## 異常系の動作確認
+
+正常系だけでなく、想定するエラーレスポンスが実際に返ることも確認した。対応するユニット/結合テスト(`TestRegister_DuplicateEmail`, `TestTaskGet_OtherUsersTaskNotFound`, `TestParseCalendarRange_FromAfterTo`)でも同じシナリオを担保している。
+
+### AUTH-01異常系: 既に登録済みのメールアドレスで登録
+
+```sh
+curl -s -X POST http://localhost:8080/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"taro@example.com","password":"password123","name":"太郎"}' \
+  -w "\nHTTP status: %{http_code}\n"
+```
+
+```json
+{"error":{"code":"EMAIL_ALREADY_REGISTERED","message":"email already registered"}}
+
+HTTP status: 422
+```
+
+### TASK-03異常系: 他ユーザーのタスクを取得しようとする
+
+taro(userIDが異なる別ユーザー)が作成したid=4のタスクを、jiroとしてログインした状態で取得しようとする。
+
+```sh
+curl -s http://localhost:8080/tasks/4 -H "Authorization: Bearer $JIRO_TOKEN" -w "\nHTTP status: %{http_code}\n"
+```
+
+```json
+{"error":{"code":"TASK_NOT_FOUND","message":"task not found"}}
+
+HTTP status: 404
+```
+
+他ユーザーのタスクであっても`403 Forbidden`ではなく`404`を返す設計(タスクの存在自体を教えない)のため、このレスポンスになる。
+
+### TASK-06異常系: fromがtoより後の日付になっている
+
+```sh
+curl -s "http://localhost:8080/tasks/calendar?from=2026-02-01&to=2026-01-01" \
+  -H "Authorization: Bearer $TOKEN" -w "\nHTTP status: %{http_code}\n"
+```
+
+```json
+{"error":{"code":"INVALID_DATE_RANGE","message":"from must not be after to"}}
+
+HTTP status: 422
+```
+
 ## 静的解析・自動テスト
 
 ### 静的解析
