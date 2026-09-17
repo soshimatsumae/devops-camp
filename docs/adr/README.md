@@ -27,3 +27,10 @@
 | [0008](./0008-separate-estimated-actual-weight.md) | 想定の大変さと実績の大変さを別カラムに分離する | Accepted |
 | [0009](./0009-unified-error-response-format.md) | エラーレスポンス形式を統一する | Accepted |
 | [0010](./0010-calendar-date-range-params.md) | カレンダーAPIにfrom/toクエリパラメータを設ける | Accepted |
+| [0011](./0011-production-jwt-secret-safety-net.md) | 本番環境ではJWT_SECRETのデフォルト値を拒否する | Accepted |
+| [0012](./0012-jwt-valid-methods-option.md) | JWTの署名アルゴリズム検証をWithValidMethodsで宣言的に行う | Accepted |
+| [0013](./0013-task-validation-consistency.md) | タスク作成と更新のバリデーション・completed_atの挙動を一致させる | Accepted |
+| [0014](./0014-db-connection-pool-settings.md) | DB接続プールの上限・生存時間を明示的に設定する | Accepted |
+| [0015](./0015-http-server-timeouts.md) | HTTPサーバーにタイムアウトを設定する | Accepted |
+| [0016](./0016-graceful-shutdown.md) | Graceful shutdownを実装する | Accepted |
+| [0017](./0017-internal-error-logging.md) | 500エラーの詳細はサーバー側ログにのみ残し、クライアントには汎用メッセージを返す | Accepted |

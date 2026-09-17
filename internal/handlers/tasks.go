@@ -132,7 +132,7 @@ func (h *TaskHandler) List(w http.ResponseWriter, r *http.Request) {
 	var total int
 	countQuery := "SELECT COUNT(*) FROM tasks WHERE " + whereClause
 	if err := h.DB.QueryRowContext(r.Context(), countQuery, args...).Scan(&total); err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to count tasks")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 
@@ -142,7 +142,7 @@ func (h *TaskHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := h.DB.QueryContext(r.Context(), listQuery, listArgs...)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to list tasks")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 	defer rows.Close()
@@ -151,7 +151,7 @@ func (h *TaskHandler) List(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		t, err := scanTask(rows)
 		if err != nil {
-			httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to read task row")
+			httpx.WriteInternalError(w, err)
 			return
 		}
 		tasks = append(tasks, t)
@@ -203,6 +203,12 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusUnprocessableEntity, "ESTIMATED_WEIGHT_REQUIRED", "estimated_weight is required")
 		return
 	}
+	if req.DueDate != nil {
+		if _, err := time.Parse(calendarDateLayout, *req.DueDate); err != nil {
+			httpx.WriteError(w, http.StatusUnprocessableEntity, "VALIDATION_ERROR", "due_date must be in YYYY-MM-DD format")
+			return
+		}
+	}
 
 	if req.ParentID != nil {
 		var owner int64
@@ -212,7 +218,7 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to validate parent_id")
+			httpx.WriteInternalError(w, err)
 			return
 		}
 	}
@@ -223,14 +229,14 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		userID, req.ParentID, req.Title, req.Description, models.StatusTodo, *req.EstimatedWeight, req.DueDate,
 	)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to create task")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 	id, _ := res.LastInsertId()
 
 	task, err := h.loadTask(r, id, userID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to load created task")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 
@@ -265,14 +271,14 @@ func (h *TaskHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to load task")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 
 	rows, err := h.DB.QueryContext(r.Context(),
 		"SELECT "+taskColumns+" FROM tasks WHERE parent_id = ? AND user_id = ? ORDER BY created_at ASC", id, userID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to load child tasks")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 	defer rows.Close()
@@ -281,7 +287,7 @@ func (h *TaskHandler) Get(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		child, err := scanTask(rows)
 		if err != nil {
-			httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to read child task")
+			httpx.WriteInternalError(w, err)
 			return
 		}
 		children = append(children, child)
@@ -329,7 +335,7 @@ func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to load task")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 
@@ -344,18 +350,34 @@ func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var trimmedTitle string
+	if req.Title != nil {
+		trimmedTitle = strings.TrimSpace(*req.Title)
+		if trimmedTitle == "" {
+			httpx.WriteError(w, http.StatusUnprocessableEntity, "VALIDATION_ERROR", "title cannot be empty")
+			return
+		}
+	}
+	if req.DueDate != nil {
+		if _, err := time.Parse(calendarDateLayout, *req.DueDate); err != nil {
+			httpx.WriteError(w, http.StatusUnprocessableEntity, "VALIDATION_ERROR", "due_date must be in YYYY-MM-DD format")
+			return
+		}
+	}
+
 	completingNow := req.Status != nil && *req.Status == models.StatusDone && existing.Status != models.StatusDone
 	if completingNow && req.ActualWeight == nil {
 		httpx.WriteError(w, http.StatusUnprocessableEntity, "ACTUAL_WEIGHT_REQUIRED", "actual_weight is required when completing a task")
 		return
 	}
+	uncompletingNow := req.Status != nil && *req.Status != models.StatusDone && existing.Status == models.StatusDone
 
 	sets := []string{}
 	args := []any{}
 
 	if req.Title != nil {
 		sets = append(sets, "title = ?")
-		args = append(args, strings.TrimSpace(*req.Title))
+		args = append(args, trimmedTitle)
 	}
 	if req.Description != nil {
 		sets = append(sets, "description = ?")
@@ -377,19 +399,22 @@ func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 		sets = append(sets, "completed_at = ?")
 		args = append(args, time.Now().UTC())
 	}
+	if uncompletingNow {
+		sets = append(sets, "completed_at = NULL")
+	}
 
 	if len(sets) > 0 {
 		args = append(args, id, userID)
 		query := "UPDATE tasks SET " + strings.Join(sets, ", ") + " WHERE id = ? AND user_id = ?"
 		if _, err := h.DB.ExecContext(r.Context(), query, args...); err != nil {
-			httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to update task")
+			httpx.WriteInternalError(w, err)
 			return
 		}
 	}
 
 	updated, err := h.loadTask(r, id, userID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to load updated task")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 
@@ -410,7 +435,7 @@ func (h *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.DB.ExecContext(r.Context(), `DELETE FROM tasks WHERE id = ? AND user_id = ?`, id, userID)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to delete task")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 	affected, _ := res.RowsAffected()
@@ -477,7 +502,7 @@ func (h *TaskHandler) Calendar(w http.ResponseWriter, r *http.Request) {
 		userID, models.StatusDone, from.Format(calendarDateLayout), to.Format(calendarDateLayout),
 	)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to aggregate calendar")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 	defer rows.Close()
@@ -487,7 +512,7 @@ func (h *TaskHandler) Calendar(w http.ResponseWriter, r *http.Request) {
 		var date string
 		var total int
 		if err := rows.Scan(&date, &total); err != nil {
-			httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to read calendar row")
+			httpx.WriteInternalError(w, err)
 			return
 		}
 		entries = append(entries, models.CalendarEntry{Date: date, TotalWeight: total})

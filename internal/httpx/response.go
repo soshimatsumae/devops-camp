@@ -2,6 +2,7 @@ package httpx
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 )
 
@@ -24,4 +25,12 @@ func WriteJSON(w http.ResponseWriter, status int, v any) {
 
 func WriteError(w http.ResponseWriter, status int, code, message string) {
 	WriteJSON(w, status, ErrorBody{Error: ErrorDetail{Code: code, Message: message}})
+}
+
+// WriteInternalError logs the underlying error server-side and returns a
+// generic 500 response, so internal failure details are never exposed to
+// the client.
+func WriteInternalError(w http.ResponseWriter, err error) {
+	slog.Error("internal server error", "error", err)
+	WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "internal server error")
 }

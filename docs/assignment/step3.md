@@ -307,3 +307,22 @@ ok      github.com/smatsumae/devops-camp/internal/handlers      (cached)
 ?       github.com/smatsumae/devops-camp/internal/httpx [no test files]
 ?       github.com/smatsumae/devops-camp/internal/models        [no test files]
 ```
+
+## Step3提出後のフィードバック対応
+
+Step3提出物に対するレビューで、必須要件は満たしている前提での発展的な改善案(Tips)をもらった。以下、実装したものを設計判断(ADR)とあわせて記録する。いずれも既存のユニット/結合テストが通ることを確認済み。
+
+| フィードバックの指摘 | 対応 | ADR |
+|---|---|---|
+| `JWT_SECRET`のデフォルト値のまま本番相当で起動できてしまう | `APP_ENV=production`時にデフォルト値を拒否し起動を止める | [ADR-0011](../adr/0011-production-jwt-secret-safety-net.md) |
+| JWT検証のアルゴリズムチェックが型アサーションで書かれている | `jwt.WithValidMethods`で宣言的に書き直す | [ADR-0012](../adr/0012-jwt-valid-methods-option.md) |
+| `Create`と`Update`でtitle/due_dateのバリデーションが非対称、`completed_at`が未完了に戻しても残る | Updateにもtitle空文字チェック・due_date形式検証を追加、未完了に戻したら`completed_at`をNULLに戻す | [ADR-0013](../adr/0013-task-validation-consistency.md) |
+| DB接続プールの上限・生存時間が未設定 | `SetMaxOpenConns`/`SetMaxIdleConns`/`SetConnMaxLifetime`を明示的に設定 | [ADR-0014](../adr/0014-db-connection-pool-settings.md) |
+| `ReadHeaderTimeout`等が未設定でSlowloris型攻撃に弱い(gosec G114相当) | `http.Server`を明示構築しタイムアウトを設定 | [ADR-0015](../adr/0015-http-server-timeouts.md) |
+| プロセス終了時に処理中のリクエストを取りこぼす | Graceful shutdown(`signal.NotifyContext` + `srv.Shutdown`)を実装 | [ADR-0016](../adr/0016-graceful-shutdown.md) |
+| 500エラーの原因をサーバー側で追跡できない | `httpx.WriteInternalError`でサーバー側にのみログを残し、クライアントへは汎用メッセージに統一 | [ADR-0017](../adr/0017-internal-error-logging.md) |
+
+加えて、提出物(エビデンス)側の指摘として以下も対応した(実行結果は「API の動作確認」「異常系の動作確認」の各節を参照)。
+
+- `POST /auth/register`の重複メール、`GET /tasks/{id}`の他ユーザーアクセス、`GET /tasks/calendar`のfrom>toの3つの異常系レスポンスをcurl結果として追記
+- `GET /tasks/calendar?from=...&to=...`(指定ありパターン)、`GET /tasks?per_page=1&page=...`(ページネーション)の動作確認を追記

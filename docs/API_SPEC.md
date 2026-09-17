@@ -220,6 +220,7 @@ Authorization: Bearer <access_token>
 | ステータスコード | エラーコード | エラー内容 |
 | :---- | :---- | :---- |
 | 422 | ESTIMATED\_WEIGHT\_REQUIRED | estimated\_weightが未指定 |
+| 422 | VALIDATION\_ERROR | due\_dateがYYYY-MM-DD形式でない |
 | 422 | INVALID\_PARENT\_ID | parent\_idが存在しない、または他ユーザーのタスク |
 
 ### GET /tasks/{id}(タスク詳細取得) {#get-/tasks/{id}(タスク詳細取得)}
@@ -264,7 +265,7 @@ Authorization: Bearer <access_token>
 { "status": "done", "actual_weight": 4 }
 ```
 
-※ `status`を`done`に更新するタイミングでサーバー側が`completed_at`に現在日時を自動設定する。
+※ `status`を`done`に更新するタイミングでサーバー側が`completed_at`に現在日時を自動設定する。逆に`done`から`todo`/`in_progress`に戻した場合、`completed_at`は`null`に戻る。
 
 レスポンス(200): 更新後のタスクオブジェクト
 
@@ -273,6 +274,7 @@ Authorization: Bearer <access_token>
 | ステータスコード | エラーコード | エラー内容 |
 | :---- | :---- | :---- |
 | 422 | ACTUAL\_WEIGHT\_REQUIRED | statusをdoneに更新する際にactual\_weightが未指定 |
+| 422 | VALIDATION\_ERROR | titleを空文字にしようとした、またはdue\_dateがYYYY-MM-DD形式でない |
 | 404 | TASK\_NOT\_FOUND | タスクが存在しない、または他ユーザーのタスク |
 
 ---

@@ -23,11 +23,8 @@ func GenerateToken(secret []byte, userID int64, ttl time.Duration) (string, erro
 func ParseToken(secret []byte, tokenStr string) (int64, error) {
 	claims := &jwt.RegisteredClaims{}
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrInvalidToken
-		}
 		return secret, nil
-	})
+	}, jwt.WithValidMethods([]string{"HS256"}))
 	if err != nil || !token.Valid {
 		return 0, ErrInvalidToken
 	}

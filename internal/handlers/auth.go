@@ -53,7 +53,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	hash, err := auth.HashPassword(req.Password)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to hash password")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 
@@ -67,7 +67,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 			httpx.WriteError(w, http.StatusUnprocessableEntity, "EMAIL_ALREADY_REGISTERED", "email already registered")
 			return
 		}
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to create user")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var createdAt time.Time
 	err = h.DB.QueryRowContext(r.Context(), `SELECT created_at FROM users WHERE id = ?`, id).Scan(&createdAt)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to load created user")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 
@@ -118,13 +118,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to look up user")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 
 	token, err := auth.GenerateToken(h.JWTSecret, userID, h.TokenTTL)
 	if err != nil {
-		httpx.WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to generate token")
+		httpx.WriteInternalError(w, err)
 		return
 	}
 

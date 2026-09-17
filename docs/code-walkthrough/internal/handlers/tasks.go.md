@@ -21,6 +21,7 @@
 ### `Create` (`POST /tasks`)
 
 - `title`必須(トリム後空文字はNG)、`estimated_weight`必須(nilなら`422 ESTIMATED_WEIGHT_REQUIRED`)
+- `due_date`は指定時に`time.Parse`で`YYYY-MM-DD`形式かを検証(不正なら`422 VALIDATION_ERROR`)
 - `parent_id`指定時は、そのタスクが存在し**かつ自分の所有物であること**をSELECTで確認してから作成([ADR-0007](../../../adr/0007-self-referencing-task-hierarchy.md))
 - 作成後は`loadTask`で読み直してから返す(DBのデフォルト値やAUTO_INCREMENTのIDを含めて正確なレスポンスを作るため)
 
@@ -33,8 +34,10 @@
 ### `Update` (`PATCH /tasks/{id}`)
 
 - 送られてきたフィールドだけを動的にSET句に組み込む部分更新(PATCHセマンティクス)
+- `title`を送る場合はCreateと同じくトリム後空文字を`422 VALIDATION_ERROR`で拒否。`due_date`もCreateと同じ`time.Parse`検証を通す(作成時と更新時で許容する値がずれないようにするため)
 - `status`を`done`に変更する瞬間(`completingNow`)だけ`actual_weight`必須というビジネスルールを強制し([ADR-0008](../../../adr/0008-separate-estimated-actual-weight.md))、同時に`completed_at`を現在時刻で自動セットする
 - 既に`done`のタスクを再度`done`にしても`completingNow`は`false`になる(`existing.Status != models.StatusDone`の条件があるため、`completed_at`が上書きされない)
+- 逆に`done`から`todo`/`in_progress`に戻す(`uncompletingNow`)と`completed_at`を`NULL`に戻す。「未完了なのに完了日時が残る」という矛盾を防ぐための仕様
 
 ### `Delete` (`DELETE /tasks/{id}`)
 
