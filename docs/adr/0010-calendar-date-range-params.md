@@ -10,10 +10,11 @@ Accepted
 
 ## Decision
 
-`GET /tasks/calendar`に`from`/`to`(`YYYY-MM-DD`)のクエリパラメータを追加する。未指定時は「当日から365日前〜当日」をデフォルト範囲とする(`internal/handlers/tasks.go`の`parseCalendarRange`)。`from`が`to`より後の場合は`422 INVALID_DATE_RANGE`、日付形式が不正な場合は`400 INVALID_DATE_FORMAT`を返す。
+`GET /tasks/calendar`に`from`/`to`(`YYYY-MM-DD`)のクエリパラメータを追加する。未指定時は「その年(当日が属する年)の1/1〜12/31」をデフォルト範囲とする(`internal/handlers/tasks.go`の`parseCalendarRange`)。`from`が`to`より後の場合は`422 INVALID_DATE_RANGE`、日付形式が不正な場合は`400 INVALID_DATE_FORMAT`を返す。
 
 ## Consequences
 
 - デフォルトのレスポンスサイズが1年分に固定され、アカウントの利用期間に比例して肥大化することがなくなる
 - フロントエンド側(GitHubのコントリビューションカレンダー風UI)は、表示期間に応じて`from`/`to`を指定する実装が前提になる
 - 「全期間の集計を一度に見たい」というユースケースがある場合、クライアント側で`from`/`to`を複数回に分けて呼び出す必要がある(サーバー側で全期間取得のショートカットは提供していない)
+- デフォルト範囲は当初「当日から365日前〜当日」としていたが、ダッシュボード(S-03)を「その年1年の頑張りを振り返る画面」として使う想定に合わせ、「その年の1/1〜12/31」に変更した(Step4での画面設計時に決定、[docs/assignment/step4.md](../assignment/step4.md)参照)

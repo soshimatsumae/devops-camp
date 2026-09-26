@@ -9,7 +9,8 @@ DevOpsキャンプ最終課題として開発する、見積もり振り返り�
 |---|---|---|
 | 1-2 | テーマ選定・API/DB仕様書 | 完了 |
 | 3 | バックエンド実装 | 完了 |
-| 4-6 | フロントエンド(学習・設計・実装) | 未着手 |
+| 4 | フロントエンド1(技術学習・画面設計) | 進行中 |
+| 5-6 | フロントエンド2・実装 | 未着手 |
 | 7-8 | インフラ(学習・設計・クラウド展開) | 未着手 |
 | 9-10 | コンテナ化(学習・運用移行) | 未着手 |
 | 11 | CI/CDパイプライン | 未着手 |
@@ -148,9 +149,22 @@ curl -s -X PATCH http://localhost:8080/tasks/1 \
 curl -s http://localhost:8080/tasks/calendar -H "Authorization: Bearer $TOKEN"
 ```
 
-## フロントエンド (Step 4-6)
+---
 
-未着手。着手時にこのセクションへセットアップ手順を追記する。
+## フロントエンド1 (Step 4)
+
+Step4の課題ページ([final-challenge/app/step4](https://devopscamp.reheartcloud.com/final-challenge/app/step4))に沿って、HTML/CSS・JavaScript・TypeScriptの学習と、画面一覧・画面遷移図の作成を行う。
+
+### 画面設計
+
+- [画面一覧](./docs/SCREEN_LIST.md)
+- [画面遷移図](./docs/SCREEN_FLOW.md)
+
+タスクの作成・編集はモーダル方式、ログイン後のダッシュボード画面はカレンダー(ヒートマップ)画面とした。設計の考え方は[docs/assignment/step4.md](./docs/assignment/step4.md)を参照。
+
+## フロントエンド2・実装 (Step 5-6)
+
+未着手。着手時にこのセクションへ画面設計の詳細・セットアップ手順を追記する。
 
 ## インフラ・コンテナ・CI/CD (Step 7-11)
 
