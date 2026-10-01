@@ -10,11 +10,16 @@
 
 | テスト名 | 検証内容 |
 |---|---|
-| `TestTaskCreate_RequiresEstimatedWeight` | `estimated_weight`なしの作成リクエストは`422 ESTIMATED_WEIGHT_REQUIRED` |
+| `TestTaskCreate_RequiresEstimatedHours` | `estimated_hours`なしの作成リクエストは`422 ESTIMATED_HOURS_REQUIRED` |
+| `TestTaskCreate_EstimatedHoursOutOfRange` | `estimated_hours`が最小値(0.5)未満だと`422` |
+| `TestTaskCreate_EstimatedHoursAllowsDecimal` | `estimated_hours`に`1.5`のような小数を指定できることを確認 |
 | `TestTaskCreate_InvalidParentID` | 存在しない`parent_id`を指定すると`422`(`INVALID_PARENT_ID`) |
-| `TestTaskLifecycle_CreateGetUpdateDelete` | 親タスク作成→子タスク作成→`GET`で子タスクが`children`に含まれることを確認→`actual_weight`なしで`done`にしようとして`422`→`actual_weight`ありで`done`に更新して`completed_at`が設定されることを確認→再取得して永続化を確認→削除→削除後の`GET`が`404`になることを一通り検証する、最も長いテスト |
+| `TestTaskLifecycle_CreateGetUpdateDelete` | 親タスク作成→子タスク作成→`GET`で子タスクが`children`に含まれることを確認→`actual_hours`なしで`done`にしようとして`422`→`actual_hours`ありで`done`に更新して`completed_at`が設定されることを確認→再取得して永続化を確認→削除→削除後の`GET`が`404`になることを一通り検証する、最も長いテスト |
+| `TestTaskList_KeywordSearch` | `q`パラメータでtitle/descriptionへの部分一致検索ができることを確認 |
+| `TestTaskList_SortByEstimatedHours` | `sort=estimated_hours_asc`で見積もり工数の昇順に並び替えられることを確認 |
+| `TestTaskList_InvalidSort` | ホワイトリストにない`sort`値は`400`になることを確認 |
 | `TestTaskGet_OtherUsersTaskNotFound` | 別ユーザー(`jiro`)を追加で作成し、taroのタスクをjiroとして取得しようとすると`404`になることを確認(所有者チェック) |
-| `TestTaskCalendar_AggregatesByCompletionDate` | 重さ3と5のタスクを作成して両方完了させ、`GET /tasks/calendar`で同日の合計(`8`)に集計されることを確認 |
+| `TestTaskCalendar_AggregatesByCompletionDate` | 工数3時間と5時間のタスクを作成して両方完了させ、`GET /tasks/calendar`で同日の合計(`8`)に集計されることを確認 |
 
 ## 読むときのポイント
 

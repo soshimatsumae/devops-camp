@@ -6,10 +6,10 @@
 
 1. `config.Load()`で環境変数から設定を読み込む
 2. `db.Open(cfg.MySQLDSN)`でMySQLに接続(接続確認まで含む。失敗したら`log.Fatalf`で即終了)
-3. `AuthHandler`・`TaskHandler`をDB接続とJWTシークレット・トークンTTLを渡して生成
-4. `auth.RequireAuth(cfg.JWTSecret)`で認証デコレータを作り、`/tasks`系ハンドラをラップ
+3. `AuthHandler`・`TaskHandler`・`ListHandler`をDB接続とJWTシークレット・トークンTTLを渡して生成
+4. `auth.RequireAuth(cfg.JWTSecret)`で認証デコレータを作り、`/tasks`系・`/lists`系ハンドラをラップ
 5. `http.NewServeMux()`(Go 1.22+の拡張ServeMux)にメソッド+パスパターンでルートを登録
-6. `http.ListenAndServe`でサーバー起動
+6. タイムアウト([ADR-0015](../adr/0015-http-server-timeouts.md))を設定した`http.Server`を明示的に構築し、ゴルーチンで起動。メインゴルーチンは`signal.NotifyContext`でSIGINT/SIGTERMを待ち受け、シグナル受信後は`srv.Shutdown`でgraceful shutdownする([ADR-0016](../adr/0016-graceful-shutdown.md))
 
 ## ルーティング一覧
 
@@ -23,6 +23,10 @@
 | GET | `/tasks/{id}` | 必要 | `taskHandler.Get` |
 | PATCH | `/tasks/{id}` | 必要 | `taskHandler.Update` |
 | DELETE | `/tasks/{id}` | 必要 | `taskHandler.Delete` |
+| GET | `/lists` | 必要 | `listHandler.List` |
+| POST | `/lists` | 必要 | `listHandler.Create` |
+| PATCH | `/lists/{id}` | 必要 | `listHandler.Update` |
+| DELETE | `/lists/{id}` | 必要 | `listHandler.Delete` |
 
 ## 読むときのポイント
 

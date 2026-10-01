@@ -34,3 +34,7 @@
 | [0015](./0015-http-server-timeouts.md) | HTTPサーバーにタイムアウトを設定する | Accepted |
 | [0016](./0016-graceful-shutdown.md) | Graceful shutdownを実装する | Accepted |
 | [0017](./0017-internal-error-logging.md) | 500エラーの詳細はサーバー側ログにのみ残し、クライアントには汎用メッセージを返す | Accepted |
+| [0018](./0018-task-keyword-search-like.md) | タスクのキーワード検索はLIKEによる部分一致で実装する | Accepted |
+| [0019](./0019-weight-to-hours.md) | 見積もり・実績の単位を5段階評価から時間ベースの工数に変更する | Accepted |
+| [0020](./0020-task-list-sort-whitelist.md) | タスク一覧の並び替えはsortパラメータのホワイトリストで実装する | Accepted |
+| [0021](./0021-task-list-grouping.md) | タスクを「リスト」でグルーピングする機能を追加する | Accepted |

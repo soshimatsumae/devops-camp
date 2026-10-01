@@ -30,6 +30,7 @@ func main() {
 
 	authHandler := &handlers.AuthHandler{DB: conn, JWTSecret: cfg.JWTSecret, TokenTTL: cfg.TokenTTL}
 	taskHandler := &handlers.TaskHandler{DB: conn}
+	listHandler := &handlers.ListHandler{DB: conn}
 	requireAuth := auth.RequireAuth(cfg.JWTSecret)
 
 	mux := http.NewServeMux()
@@ -42,6 +43,11 @@ func main() {
 	mux.HandleFunc("GET /tasks/{id}", requireAuth(taskHandler.Get))
 	mux.HandleFunc("PATCH /tasks/{id}", requireAuth(taskHandler.Update))
 	mux.HandleFunc("DELETE /tasks/{id}", requireAuth(taskHandler.Delete))
+
+	mux.HandleFunc("GET /lists", requireAuth(listHandler.List))
+	mux.HandleFunc("POST /lists", requireAuth(listHandler.Create))
+	mux.HandleFunc("PATCH /lists/{id}", requireAuth(listHandler.Update))
+	mux.HandleFunc("DELETE /lists/{id}", requireAuth(listHandler.Delete))
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

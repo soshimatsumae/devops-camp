@@ -52,6 +52,7 @@ func setupTestDB(t *testing.T) *sql.DB {
 	for _, stmt := range []string{
 		"SET FOREIGN_KEY_CHECKS=0",
 		"TRUNCATE TABLE tasks",
+		"TRUNCATE TABLE lists",
 		"TRUNCATE TABLE users",
 		"SET FOREIGN_KEY_CHECKS=1",
 	} {

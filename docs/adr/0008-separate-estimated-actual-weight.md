@@ -10,10 +10,12 @@ Accepted
 
 ## Decision
 
-`tasks`テーブルに`estimated_weight`(作成時に入力、必須、1〜5)と`actual_weight`(完了時に入力、NULL許容、1〜5)を別カラムとして持たせる。`status`を`done`に変更する際に`actual_weight`が未指定だと`ACTUAL_WEIGHT_REQUIRED`エラーで拒否する(`internal/handlers/tasks.go`のUpdate)。
+`tasks`テーブルに想定工数(作成時に入力、必須)と実績工数(完了時に入力、NULL許容)を別カラムとして持たせる。`status`を`done`に変更する際に実績工数が未指定だとエラーで拒否する(`internal/handlers/tasks.go`のUpdate)。
+
+列名・値の単位は当初`estimated_weight`/`actual_weight`(1〜5の5段階評価)としていたが、Step5で`estimated_hours`/`actual_hours`(時間単位の小数)に変更した。単位変更の経緯・理由は[ADR-0019](./0019-weight-to-hours.md)を参照。
 
 ## Consequences
 
 - 見積もりと実績の差分をSQLレベルで単純な引き算・比較として扱える
 - タスク完了のたびに実績値の入力を要求するUXになるため、フロントエンド実装時(Step6)に完了操作と実績入力を1つのフローとして設計する必要がある
-- 値域(1〜5)のバリデーションはAPI層でのみ行っており、DBスキーマ側では`CHECK`制約を設けていない。DB側の整合性を厳密にしたい場合は追加のマイグレーションが必要
+- 値域(0.5〜9999)のバリデーションはAPI層でのみ行っており、DBスキーマ側では`CHECK`制約を設けていない。DB側の整合性を厳密にしたい場合は追加のマイグレーションが必要

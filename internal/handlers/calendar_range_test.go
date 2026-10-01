@@ -12,12 +12,16 @@ func TestParseCalendarRange_Default(t *testing.T) {
 		t.Fatalf("parseCalendarRange() error = %v", err)
 	}
 
-	today := time.Now().UTC().Truncate(24 * time.Hour)
-	if !to.Equal(today) {
-		t.Errorf("to = %v, want today (%v)", to, today)
+	if from.Weekday() != time.Sunday {
+		t.Errorf("from = %v, want a Sunday", from)
 	}
-	if want := today.AddDate(0, 0, -365); !from.Equal(want) {
-		t.Errorf("from = %v, want %v", from, want)
+	today := time.Now().UTC().Truncate(24 * time.Hour)
+	jan1 := time.Date(today.Year(), 1, 1, 0, 0, 0, 0, time.UTC)
+	if from.Before(jan1) || from.After(jan1.AddDate(0, 0, 6)) {
+		t.Errorf("from = %v, want within the first 7 days of %d", from, today.Year())
+	}
+	if want := from.AddDate(0, 0, 370); !to.Equal(want) {
+		t.Errorf("to = %v, want %v (371 days after from)", to, want)
 	}
 }
 

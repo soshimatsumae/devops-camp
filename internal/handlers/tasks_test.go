@@ -23,7 +23,7 @@ func newTaskHandlerWithUser(t *testing.T) (*handlers.TaskHandler, []byte, int64)
 	return &handlers.TaskHandler{DB: db}, secret, userID
 }
 
-func TestTaskCreate_RequiresEstimatedWeight(t *testing.T) {
+func TestTaskCreate_RequiresEstimatedHours(t *testing.T) {
 	h, secret, userID := newTaskHandlerWithUser(t)
 
 	req := newAuthedRequest(t, secret, userID, http.MethodPost, "/tasks", []byte(`{"title":"タスク"}`))
@@ -35,8 +35,39 @@ func TestTaskCreate_RequiresEstimatedWeight(t *testing.T) {
 	}
 	var got map[string]any
 	decodeJSON(t, rec, &got)
-	if got["error"].(map[string]any)["code"] != "ESTIMATED_WEIGHT_REQUIRED" {
-		t.Errorf("error.code = %v, want ESTIMATED_WEIGHT_REQUIRED", got["error"])
+	if got["error"].(map[string]any)["code"] != "ESTIMATED_HOURS_REQUIRED" {
+		t.Errorf("error.code = %v, want ESTIMATED_HOURS_REQUIRED", got["error"])
+	}
+}
+
+func TestTaskCreate_EstimatedHoursOutOfRange(t *testing.T) {
+	h, secret, userID := newTaskHandlerWithUser(t)
+
+	req := newAuthedRequest(t, secret, userID, http.MethodPost, "/tasks",
+		[]byte(`{"title":"タスク","estimated_hours":0.1}`))
+	rec := httptest.NewRecorder()
+	h.Create(rec, req)
+
+	if rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusUnprocessableEntity, rec.Body.String())
+	}
+}
+
+func TestTaskCreate_EstimatedHoursAllowsDecimal(t *testing.T) {
+	h, secret, userID := newTaskHandlerWithUser(t)
+
+	req := newAuthedRequest(t, secret, userID, http.MethodPost, "/tasks",
+		[]byte(`{"title":"タスク","estimated_hours":1.5}`))
+	rec := httptest.NewRecorder()
+	h.Create(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusCreated, rec.Body.String())
+	}
+	var got map[string]any
+	decodeJSON(t, rec, &got)
+	if got["estimated_hours"].(float64) != 1.5 {
+		t.Errorf("estimated_hours = %v, want 1.5", got["estimated_hours"])
 	}
 }
 
@@ -44,7 +75,7 @@ func TestTaskCreate_InvalidParentID(t *testing.T) {
 	h, secret, userID := newTaskHandlerWithUser(t)
 
 	req := newAuthedRequest(t, secret, userID, http.MethodPost, "/tasks",
-		[]byte(`{"title":"子タスク","estimated_weight":3,"parent_id":9999}`))
+		[]byte(`{"title":"子タスク","estimated_hours":3,"parent_id":9999}`))
 	rec := httptest.NewRecorder()
 	h.Create(rec, req)
 
@@ -58,7 +89,7 @@ func TestTaskLifecycle_CreateGetUpdateDelete(t *testing.T) {
 
 	// Create a parent task.
 	createReq := newAuthedRequest(t, secret, userID, http.MethodPost, "/tasks",
-		[]byte(`{"title":"親タスク","estimated_weight":5}`))
+		[]byte(`{"title":"親タスク","estimated_hours":5}`))
 	createRec := httptest.NewRecorder()
 	h.Create(createRec, createReq)
 	if createRec.Code != http.StatusCreated {
@@ -70,7 +101,7 @@ func TestTaskLifecycle_CreateGetUpdateDelete(t *testing.T) {
 
 	// Create a child task under it.
 	childReq := newAuthedRequest(t, secret, userID, http.MethodPost, "/tasks",
-		[]byte(`{"title":"子タスク","estimated_weight":2,"parent_id":`+strconv.FormatInt(parentID, 10)+`}`))
+		[]byte(`{"title":"子タスク","estimated_hours":2,"parent_id":`+strconv.FormatInt(parentID, 10)+`}`))
 	childRec := httptest.NewRecorder()
 	h.Create(childRec, childReq)
 	if childRec.Code != http.StatusCreated {
@@ -92,7 +123,7 @@ func TestTaskLifecycle_CreateGetUpdateDelete(t *testing.T) {
 		t.Fatalf("expected 1 child task, got %d", len(children))
 	}
 
-	// Completing the task without actual_weight should fail.
+	// Completing the task without actual_hours should fail.
 	badUpdateReq := newAuthedRequest(t, secret, userID, http.MethodPatch, "/tasks/"+strconv.FormatInt(parentID, 10),
 		[]byte(`{"status":"done"}`))
 	badUpdateReq.SetPathValue("id", strconv.FormatInt(parentID, 10))
@@ -102,9 +133,9 @@ func TestTaskLifecycle_CreateGetUpdateDelete(t *testing.T) {
 		t.Fatalf("update status = %d, want %d, body=%s", badUpdateRec.Code, http.StatusUnprocessableEntity, badUpdateRec.Body.String())
 	}
 
-	// Completing with actual_weight should succeed and persist.
+	// Completing with actual_hours should succeed and persist.
 	updateReq := newAuthedRequest(t, secret, userID, http.MethodPatch, "/tasks/"+strconv.FormatInt(parentID, 10),
-		[]byte(`{"status":"done","actual_weight":8}`))
+		[]byte(`{"status":"done","actual_hours":8}`))
 	updateReq.SetPathValue("id", strconv.FormatInt(parentID, 10))
 	updateRec := httptest.NewRecorder()
 	h.Update(updateRec, updateReq)
@@ -127,8 +158,8 @@ func TestTaskLifecycle_CreateGetUpdateDelete(t *testing.T) {
 	h.Get(reGetRec, reGetReq)
 	var reFetched map[string]any
 	decodeJSON(t, reGetRec, &reFetched)
-	if reFetched["actual_weight"].(float64) != 8 {
-		t.Errorf("persisted actual_weight = %v, want 8", reFetched["actual_weight"])
+	if reFetched["actual_hours"].(float64) != 8 {
+		t.Errorf("persisted actual_hours = %v, want 8", reFetched["actual_hours"])
 	}
 
 	// Delete and confirm it is gone.
@@ -149,6 +180,84 @@ func TestTaskLifecycle_CreateGetUpdateDelete(t *testing.T) {
 	}
 }
 
+func TestTaskList_KeywordSearch(t *testing.T) {
+	h, secret, userID := newTaskHandlerWithUser(t)
+
+	seed := func(title, description string) {
+		body := []byte(`{"title":"` + title + `","description":"` + description + `","estimated_hours":1}`)
+		req := newAuthedRequest(t, secret, userID, http.MethodPost, "/tasks", body)
+		rec := httptest.NewRecorder()
+		h.Create(rec, req)
+		if rec.Code != http.StatusCreated {
+			t.Fatalf("seed create status = %d, want %d, body=%s", rec.Code, http.StatusCreated, rec.Body.String())
+		}
+	}
+	seed("ER図を作成する", "")
+	seed("API仕様書を書く", "ER図をもとに決める")
+	seed("買い物に行く", "")
+
+	req := newAuthedRequest(t, secret, userID, http.MethodGet, "/tasks?q=ER図", nil)
+	rec := httptest.NewRecorder()
+	h.List(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("list status = %d, want %d, body=%s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+	var got map[string]any
+	decodeJSON(t, rec, &got)
+	data, _ := got["data"].([]any)
+	if len(data) != 2 {
+		t.Fatalf("expected 2 tasks matching keyword in title or description, got %d: %v", len(data), data)
+	}
+}
+
+func TestTaskList_SortByEstimatedHours(t *testing.T) {
+	h, secret, userID := newTaskHandlerWithUser(t)
+
+	seed := func(title string, hours string) {
+		body := []byte(`{"title":"` + title + `","estimated_hours":` + hours + `}`)
+		req := newAuthedRequest(t, secret, userID, http.MethodPost, "/tasks", body)
+		rec := httptest.NewRecorder()
+		h.Create(rec, req)
+		if rec.Code != http.StatusCreated {
+			t.Fatalf("seed create status = %d, want %d, body=%s", rec.Code, http.StatusCreated, rec.Body.String())
+		}
+	}
+	seed("中", "3")
+	seed("大", "8")
+	seed("小", "1")
+
+	req := newAuthedRequest(t, secret, userID, http.MethodGet, "/tasks?sort=estimated_hours_asc", nil)
+	rec := httptest.NewRecorder()
+	h.List(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("list status = %d, want %d, body=%s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+	var got map[string]any
+	decodeJSON(t, rec, &got)
+	data, _ := got["data"].([]any)
+	if len(data) != 3 {
+		t.Fatalf("expected 3 tasks, got %d", len(data))
+	}
+	wantOrder := []string{"小", "中", "大"}
+	for i, want := range wantOrder {
+		title := data[i].(map[string]any)["title"]
+		if title != want {
+			t.Errorf("data[%d].title = %v, want %v", i, title, want)
+		}
+	}
+}
+
+func TestTaskList_InvalidSort(t *testing.T) {
+	h, secret, userID := newTaskHandlerWithUser(t)
+
+	req := newAuthedRequest(t, secret, userID, http.MethodGet, "/tasks?sort=nonsense", nil)
+	rec := httptest.NewRecorder()
+	h.List(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d, body=%s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}
+
 func TestTaskGet_OtherUsersTaskNotFound(t *testing.T) {
 	h, secret, userID := newTaskHandlerWithUser(t)
 
@@ -160,7 +269,7 @@ func TestTaskGet_OtherUsersTaskNotFound(t *testing.T) {
 	otherUserID, _ := res.LastInsertId()
 
 	createReq := newAuthedRequest(t, secret, userID, http.MethodPost, "/tasks",
-		[]byte(`{"title":"太郎のタスク","estimated_weight":3}`))
+		[]byte(`{"title":"太郎のタスク","estimated_hours":3}`))
 	createRec := httptest.NewRecorder()
 	h.Create(createRec, createReq)
 	var created map[string]any
@@ -180,9 +289,9 @@ func TestTaskGet_OtherUsersTaskNotFound(t *testing.T) {
 func TestTaskCalendar_AggregatesByCompletionDate(t *testing.T) {
 	h, secret, userID := newTaskHandlerWithUser(t)
 
-	for _, weight := range []string{"3", "5"} {
+	for _, hours := range []string{"3", "5"} {
 		createReq := newAuthedRequest(t, secret, userID, http.MethodPost, "/tasks",
-			[]byte(`{"title":"タスク","estimated_weight":`+weight+`}`))
+			[]byte(`{"title":"タスク","estimated_hours":`+hours+`}`))
 		createRec := httptest.NewRecorder()
 		h.Create(createRec, createReq)
 		var created map[string]any
@@ -190,7 +299,7 @@ func TestTaskCalendar_AggregatesByCompletionDate(t *testing.T) {
 		taskID := int64(created["id"].(float64))
 
 		updateReq := newAuthedRequest(t, secret, userID, http.MethodPatch, "/tasks/"+strconv.FormatInt(taskID, 10),
-			[]byte(`{"status":"done","actual_weight":`+weight+`}`))
+			[]byte(`{"status":"done","actual_hours":`+hours+`}`))
 		updateReq.SetPathValue("id", strconv.FormatInt(taskID, 10))
 		h.Update(httptest.NewRecorder(), updateReq)
 	}
@@ -209,7 +318,7 @@ func TestTaskCalendar_AggregatesByCompletionDate(t *testing.T) {
 		t.Fatalf("expected 1 aggregated day, got %d (%v)", len(data), data)
 	}
 	entry := data[0].(map[string]any)
-	if entry["total_weight"].(float64) != 8 {
-		t.Errorf("total_weight = %v, want 8", entry["total_weight"])
+	if entry["total_hours"].(float64) != 8 {
+		t.Errorf("total_hours = %v, want 8", entry["total_hours"])
 	}
 }

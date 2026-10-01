@@ -36,5 +36,6 @@
 
 - [auth.go](./internal/handlers/auth.go.md) / [auth_test.go](./internal/handlers/auth_test.go.md)
 - [tasks.go](./internal/handlers/tasks.go.md) / [tasks_test.go](./internal/handlers/tasks_test.go.md)
+- [lists.go](./internal/handlers/lists.go.md) / [lists_test.go](./internal/handlers/lists_test.go.md)
 - [calendar_range_test.go](./internal/handlers/calendar_range_test.go.md)
 - [testhelpers_test.go](./internal/handlers/testhelpers_test.go.md)

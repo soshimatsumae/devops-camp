@@ -135,7 +135,7 @@ TOKEN=$(curl -s -X POST http://localhost:8080/auth/login \
 # タスク作成
 curl -s -X POST http://localhost:8080/tasks \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"title":"ER図を作成する","estimated_weight":3}'
+  -d '{"title":"ER図を作成する","estimated_hours":3}'
 
 # タスク一覧
 curl -s http://localhost:8080/tasks -H "Authorization: Bearer $TOKEN"
@@ -143,7 +143,7 @@ curl -s http://localhost:8080/tasks -H "Authorization: Bearer $TOKEN"
 # タスク完了
 curl -s -X PATCH http://localhost:8080/tasks/1 \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"status":"done","actual_weight":4}'
+  -d '{"status":"done","actual_hours":4}'
 
 # 日別集計(コントリビューションカレンダー用)
 curl -s http://localhost:8080/tasks/calendar -H "Authorization: Bearer $TOKEN"
@@ -164,7 +164,7 @@ Step4の課題ページ([final-challenge/app/step4](https://devopscamp.reheartcl
 
 ## フロントエンド2・実装 (Step 5-6)
 
-未着手。着手時にこのセクションへ画面設計の詳細・セットアップ手順を追記する。
+未着手。着手時にこのセクションへ画面設計の詳細・セットアップ手順を追記する。Step4提出後の画面設計の変更点は[docs/assignment/step5.md](./docs/assignment/step5.md)を参照。
 
 ## インフラ・コンテナ・CI/CD (Step 7-11)
 

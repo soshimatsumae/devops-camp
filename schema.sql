@@ -9,15 +9,27 @@ CREATE TABLE IF NOT EXISTS users (
   UNIQUE KEY idx_users_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS lists (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_lists_user_id (user_id),
+  CONSTRAINT fk_lists_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS tasks (
   id BIGINT NOT NULL AUTO_INCREMENT,
   user_id BIGINT NOT NULL,
   parent_id BIGINT DEFAULT NULL,
+  list_id BIGINT DEFAULT NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT DEFAULT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'todo',
-  estimated_weight SMALLINT NOT NULL,
-  actual_weight SMALLINT DEFAULT NULL,
+  estimated_hours DECIMAL(6,1) NOT NULL,
+  actual_hours DECIMAL(6,1) DEFAULT NULL,
   due_date DATE DEFAULT NULL,
   completed_at TIMESTAMP NULL DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -25,8 +37,10 @@ CREATE TABLE IF NOT EXISTS tasks (
   PRIMARY KEY (id),
   KEY idx_tasks_user_id (user_id),
   KEY idx_tasks_parent_id (parent_id),
+  KEY idx_tasks_list_id (list_id),
   KEY idx_tasks_status (status),
   KEY idx_tasks_completed_at (completed_at),
   CONSTRAINT fk_tasks_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-  CONSTRAINT fk_tasks_parent FOREIGN KEY (parent_id) REFERENCES tasks (id) ON DELETE CASCADE
+  CONSTRAINT fk_tasks_parent FOREIGN KEY (parent_id) REFERENCES tasks (id) ON DELETE CASCADE,
+  CONSTRAINT fk_tasks_list FOREIGN KEY (list_id) REFERENCES lists (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

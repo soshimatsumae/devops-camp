@@ -6,8 +6,9 @@ APIレスポンス・DB行のGo表現となる構造体を定義するだけの�
 
 - `User`構造体: `id`/`email`/`password_hash`/`name`/`created_at`/`updated_at`。`PasswordHash`だけ`json:"-"`が付いており、JSONへ絶対にシリアライズされない
 - ステータス定数: `StatusTodo` / `StatusInProgress` / `StatusDone`(それぞれ`"todo"`/`"in_progress"`/`"done"`)
-- `Task`構造体: DB仕様書([docs/DB_SPEC.md](../../../DB_SPEC.md))の`tasks`テーブルに対応。NULL許容カラムはすべてポインタ型(`*int64`, `*string`, `*int`, `*time.Time`)で表現している
-- `CalendarEntry`構造体: `GET /tasks/calendar`のレスポンス1件分(`date`と`total_weight`)
+- `Task`構造体: DB仕様書([docs/DB_SPEC.md](../../../DB_SPEC.md))の`tasks`テーブルに対応。NULL許容カラムはすべてポインタ型(`*int64`, `*string`, `*float64`, `*time.Time`)で表現している
+- `List`構造体: `lists`テーブルに対応([ADR-0021](../../../adr/0021-task-list-grouping.md))。NULL許容カラムを持たないため、`Task`と違ってポインタ型のフィールドはない
+- `CalendarEntry`構造体: `GET /tasks/calendar`のレスポンス1件分(`date`と`total_hours`)
 
 ## 読むときのポイント
 
