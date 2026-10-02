@@ -7,24 +7,25 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
   :root {
-    --paper: #f7f4ec;
-    --surface: #fffdf7;
-    --ink: #2b2a26;
-    --ink-soft: #6b6a63;
-    --line: #8a887e;
-    --line-soft: #d3cfc2;
+    --paper: #ffffff;
+    --surface: #ffffff;
+    --ink: #24292f;
+    --ink-soft: #656d76;
+    --line: #8c959f;
+    --line-soft: #d0d7de;
     --accent: #2f6f8f;
     --accent-soft: #dbe9ef;
-    --accent-ink: #fffdf7;
+    --accent-ink: #ffffff;
     --danger: #9b4d3f;
-    --shadow: 2px 2px 0 rgba(43,42,38,0.12);
-    --dot-ink: #fffdf7;
+    --shadow: 2px 2px 0 rgba(36,41,47,0.10);
+    --dot-ink: #ffffff;
     --f-login: #2f6fb0;
     --f-register: #7b53b5;
     --f-create: #c26f14;
     --f-complete: #2c8659;
     --f-delete: #b3473b;
-    --f-session: #77746a;
+    --f-session: #6e7781;
+    --f-list: #1f8a7a;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -47,6 +48,7 @@
       --f-complete: #6dcc9a;
       --f-delete: #ef8b7e;
       --f-session: #aaa69a;
+      --f-list: #5fd1bd;
     }
   }
   :root[data-theme="dark"] {
@@ -69,6 +71,7 @@
     --f-complete: #6dcc9a;
     --f-delete: #ef8b7e;
     --f-session: #aaa69a;
+    --f-list: #5fd1bd;
   }
 
   .f-login { --fc: var(--f-login); }
@@ -77,6 +80,7 @@
   .f-complete { --fc: var(--f-complete); }
   .f-delete { --fc: var(--f-delete); }
   .f-session { --fc: var(--f-session); }
+  .f-list { --fc: var(--f-list); }
 
   * { box-sizing: border-box; }
   body {
@@ -142,7 +146,7 @@
     background-size: 22px 22px;
   }
   .scroll-hint { font: 500 0.72rem 'IBM Plex Mono', monospace; color: var(--ink-soft); margin: 0 0 6px; }
-  #canvas { position: relative; width: 1820px; height: 1310px; }
+  #canvas { position: relative; width: 1820px; height: 1700px; }
   #wires { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: visible; }
   #labels { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
 
@@ -309,6 +313,7 @@
           <marker id="ah-complete" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--f-complete)"/></marker>
           <marker id="ah-delete" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--f-delete)"/></marker>
           <marker id="ah-session" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--f-session)"/></marker>
+          <marker id="ah-list" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--f-list)"/></marker>
         </defs>
       </svg>
       <div id="labels"></div>
@@ -370,8 +375,16 @@
             <div class="hm-leg">少 → 多(その日の実績工数・時間)</div>
             <div class="sec">タスク一覧</div>
             <div class="row between">
-              <span class="bx" style="min-height:20px; font-size:0.55rem;">status: すべて ▾</span>
+              <span class="bx" style="min-height:20px; font-size:0.55rem; flex:1;">🔍 キーワードで検索</span>
               <span class="b p sm">+ 新規タスク作成<span class="hs f-create" data-flow="create" data-to="m01" data-label="新規作成" title="新規作成 → M-01">1</span></span>
+            </div>
+            <div class="row between" style="margin-top:-2px;">
+              <span class="bx" style="min-height:20px; font-size:0.55rem;">status: すべて ▾</span>
+              <span class="bx" style="min-height:20px; font-size:0.55rem;">リスト: すべて ▾</span>
+              <span class="lnk" style="font-size:0.78rem;">⚙ 管理<span class="hs f-list" data-flow="list" data-to="m04" data-label="リストを管理" title="リストを管理 → M-04">1</span></span>
+            </div>
+            <div class="row between" style="margin-top:-2px;">
+              <span class="bx" style="min-height:20px; font-size:0.55rem; flex:1;">並び替え: 新しい順 ▾</span>
             </div>
             <div class="trow"><span><span class="car">▸</span>ER図を作成する</span><span class="m"><span class="tag">todo</span>3h</span><span class="hs f-complete" data-flow="complete" data-to="m03" data-label="タスク行をクリック" title="タスク行をクリック → M-03">1</span></div>
             <div class="trow"><span><span class="car">▾</span>画面遷移図をレビュー</span><span class="m"><span class="tag">in_progress</span>2h</span></div>
@@ -457,6 +470,28 @@
         <div class="etag f-create" data-flow="create"><em>↺ 異常系</em>422 ESTIMATED_HOURS_REQUIRED / VALIDATION_ERROR → M-01内にエラーを表示</div>
       </div>
 
+      <!-- M-04 リスト管理モーダル -->
+      <div class="node" id="m04" style="left:720px; top:1330px; width:300px;">
+        <div class="nt"><span>M-04</span><b>リスト管理モーダル</b></div>
+        <div class="frame">
+          <div class="fbar"><i></i><i></i><i></i>S-03 の上に M-04</div>
+          <div class="fbody modal">
+            <div class="ghost"></div><div class="ghost s"></div>
+            <div class="mbox">
+              <div class="mh"><b>リストを管理</b><span class="x">✕ 閉じる</span></div>
+              <div class="row between">
+                <div class="bx" style="flex:1;">&nbsp;</div>
+                <span class="b p sm">+ 追加</span>
+              </div>
+              <div class="crow"><span>プロジェクトA</span><span class="m">✎ 編集・🗑 削除</span></div>
+              <div class="crow"><span>プロジェクトB</span><span class="m">✎ 編集・🗑 削除</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="note" style="margin-top:6px;">削除してもタスクは消えずlist_idがnullに戻るだけ(ON DELETE SET NULL、ADR-0021)</div>
+        <div class="etag f-list" data-flow="list"><em>↺ 異常系</em>422 VALIDATION_ERROR(リスト名が空) ／ 404 LIST_NOT_FOUND(既に削除済み) → エラーを表示してM-04内に留まる</div>
+      </div>
+
       <div class="readme">
         <h2>読み方</h2>
         <ul>
@@ -500,9 +535,13 @@
       start: 'M-03(S-03のタスク行から開く)', end: 'S-03(一覧からタスクが消える)',
       steps: ['M-03の「削除」→ 確認ダイアログで「削除する」(TASK-05)。子・孫タスクも連動削除され、M-03を閉じてS-03へ'],
       errors: ['確認ダイアログでキャンセル → 何も変わらない', '404 TASK_NOT_FOUND → エラーを表示してS-03へ'] },
+    { key: 'list', name: 'リスト管理',
+      start: 'S-03の「⚙ 管理」', end: 'M-04(操作後も開いたまま)',
+      steps: ['S-03の「⚙ 管理」でM-04(リスト管理モーダル)を開く(LIST-01)', '新しいリスト名を入力して「+ 追加」(LIST-02)、または既存行の「編集」→保存(LIST-03)、または「削除」→確認ダイアログ(LIST-04)', 'S-03のリスト絞り込みの選択肢にも結果が反映される'],
+      errors: ['422 VALIDATION_ERROR(リスト名が空) → M-04内にエラーを表示', '404 LIST_NOT_FOUND(既に削除済み) → M-04内にエラーを表示。タスクのlist_idはnullに戻るだけで消えない'] },
     { key: 'session', name: 'ログアウト・セッション切れ', dash: true,
-      start: '認証が必要な範囲(S-03・M-01〜M-03)', end: 'S-01',
-      steps: ['S-03の共通ヘッダーの「ログアウト」→ トークンを破棄してS-01へ(モーダル表示中はヘッダーを押せないため、ログアウトはS-03から)', 'S-03・M-01〜M-03のどこでAPIが401を返しても(未ログイン・トークン期限切れ)S-01へ強制リダイレクト'],
+      start: '認証が必要な範囲(S-03・M-01〜M-03)、およびM-04', end: 'S-01',
+      steps: ['S-03の共通ヘッダーの「ログアウト」→ トークンを破棄してS-01へ(モーダル表示中はヘッダーを押せないため、ログアウトはS-03から)', 'S-03・M-01〜M-04のどこでAPIが401を返しても(未ログイン・トークン期限切れ)S-01へ強制リダイレクト'],
       errors: ['未ログインと期限切れは同じ401で、フロントエンドからは区別できない(step4.md「苦労したこと3.」)'] }
   ];
 

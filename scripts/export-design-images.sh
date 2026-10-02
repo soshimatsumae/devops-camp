@@ -20,7 +20,7 @@ shot() {
   echo "wrote docs/design/images/$file"
 }
 
-shot "file://$DESIGN/flowmap.html#export" "1860,1350" "flowmap.png"
+shot "file://$DESIGN/flowmap.html#export" "1860,1740" "flowmap.png"
 
 shot "file://$DESIGN/wireframes.html#export-s01" "940,700"  "wireframe-s01.png"
 shot "file://$DESIGN/wireframes.html#export-s02" "940,760"  "wireframe-s02.png"
@@ -28,3 +28,4 @@ shot "file://$DESIGN/wireframes.html#export-s03" "940,1100" "wireframe-s03.png"
 shot "file://$DESIGN/wireframes.html#export-m01" "940,820"  "wireframe-m01.png"
 shot "file://$DESIGN/wireframes.html#export-m02" "940,820"  "wireframe-m02.png"
 shot "file://$DESIGN/wireframes.html#export-m03" "940,820"  "wireframe-m03.png"
+shot "file://$DESIGN/wireframes.html#export-m04" "940,760"  "wireframe-m04.png"

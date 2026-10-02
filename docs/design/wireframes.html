@@ -388,7 +388,7 @@
   <header class="page">
     <p class="eyebrow">devops-camp / step5 wireframes</p>
     <h1>画面ワイヤーフレーム</h1>
-    <p class="lede">docs/SCREEN_LIST.md・SCREEN_FLOW.mdで定義した6画面(S-01〜S-03、M-01〜M-03)を、線画のラフスケッチとして起こしたもの。配色・フォント・詳細レイアウトは未確定で、Step6実装時に決める。Step4提出後の変更(docs/assignment/step5.md参照)を反映済み。</p>
+    <p class="lede">docs/SCREEN_LIST.md・SCREEN_FLOW.mdで定義した7画面(S-01〜S-03、M-01〜M-04)を、線画のラフスケッチとして起こしたもの。配色・フォント・詳細レイアウトは未確定で、Step6実装時に決める。Step4提出後の変更(docs/assignment/step5.md参照)を反映済み。</p>
     <p class="note-strip">✎ これはワイヤーフレームです。画面の要素配置と情報の粒度だけを検討する段階のスケッチであり、最終的な見た目ではありません。</p>
 
     <div class="tabs" role="tablist">
@@ -398,6 +398,7 @@
       <button class="tab-btn" role="tab" id="tab-m01" aria-selected="false" aria-controls="scr-m01">M-01<span class="mono">作成モーダル</span></button>
       <button class="tab-btn" role="tab" id="tab-m02" aria-selected="false" aria-controls="scr-m02">M-02<span class="mono">編集モーダル</span></button>
       <button class="tab-btn" role="tab" id="tab-m03" aria-selected="false" aria-controls="scr-m03">M-03<span class="mono">詳細モーダル</span></button>
+      <button class="tab-btn" role="tab" id="tab-m04" aria-selected="false" aria-controls="scr-m04">M-04<span class="mono">リスト管理</span></button>
     </div>
   </header>
 
@@ -474,7 +475,7 @@
       <span class="pill need">認証: 必要</span>
       <span class="pill">ログイン後の着地画面</span>
     </div>
-    <p class="api-refs">TASK-06 <code>GET /tasks/calendar</code> ・ TASK-01 <code>GET /tasks</code></p>
+    <p class="api-refs">TASK-06 <code>GET /tasks/calendar</code> ・ TASK-01 <code>GET /tasks</code> ・ LIST-01 <code>GET /lists</code>(リスト絞り込みの選択肢用)</p>
 
     <div class="frame">
       <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;S-03</div>
@@ -506,7 +507,11 @@
         <div class="section-label">タスク一覧(下段・スクロール)</div>
         <div class="list-head">
           <div class="filter-row">
+            <span class="box" style="min-width:160px;">🔍 キーワードで検索</span>
             <span class="box">status: すべて ▾</span>
+            <span class="box">リスト: すべて ▾</span>
+            <span class="link" style="font-size:0.95rem;">⚙ リストを管理</span>
+            <span class="box">並び替え: 新しい順 ▾</span>
           </div>
           <span class="btn primary">+ 新規タスク作成</span>
         </div>
@@ -530,6 +535,7 @@
 
         <div class="pagination"><span>&lt;</span><span class="current">1</span><span>2</span><span>3</span><span>&gt;</span></div>
         <p class="modal-annotation" style="border-top:none; margin-top:14px;">デフォルトは親タスク(parent_id=null)のみ表示。行の▸をクリックするとparent_id指定で子タスクを取得してその場に展開(▾)、子タスクの▸をクリックすると孫タスクも同様に展開する</p>
+        <p class="modal-annotation">キーワード検索(q)・リスト絞り込み(list_id)・並び替え(sort)はすべてGET /tasksのクエリパラメータとして送る。「⚙ リストを管理」はM-04(リスト管理モーダル)を開く。並び替えの選択肢は「新しい順(デフォルト)」「締切日順」「締切日逆順」「想定工数順」「想定工数逆順」の5つ(実績工数順は未完了タスクのactual_hoursがnullになるため対象外、ADR-0020)</p>
       </div>
     </div>
   </section>
@@ -541,7 +547,7 @@
       <span class="pill need">認証: 必要</span>
       <span class="pill">S-03・M-03に重ねて表示</span>
     </div>
-    <p class="api-refs">TASK-02 <code>POST /tasks</code></p>
+    <p class="api-refs">TASK-02 <code>POST /tasks</code> ・ LIST-01 <code>GET /lists</code>(リスト選択肢の取得用)</p>
 
     <div class="frame">
       <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;S-03 の上に M-01</div>
@@ -563,6 +569,10 @@
           <div class="field">
             <label>タイトル(必須)</label>
             <div class="box">&nbsp;</div>
+          </div>
+          <div class="field">
+            <label>リスト(任意、親タスクのみ指定可)</label>
+            <div class="box">未選択 ▾</div>
           </div>
           <div class="field">
             <label>詳細</label>
@@ -596,7 +606,7 @@
       <span class="pill need">認証: 必要</span>
       <span class="pill">M-03に重ねて表示</span>
     </div>
-    <p class="api-refs">TASK-04 <code>PATCH /tasks/{id}</code></p>
+    <p class="api-refs">TASK-04 <code>PATCH /tasks/{id}</code> ・ LIST-01 <code>GET /lists</code>(リスト選択肢の取得用)</p>
 
     <div class="frame">
       <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;M-03 の上に M-02</div>
@@ -620,6 +630,10 @@
             <div class="box" style="border-color:var(--accent); color:var(--accent);">done ▾</div>
           </div>
           <div class="field">
+            <label>リスト(親タスクのみ表示)</label>
+            <div class="box">プロジェクトA ▾</div>
+          </div>
+          <div class="field">
             <label>実績の工数(statusをdoneにする場合は必須、時間)</label>
             <div class="hours-input">
               <div class="box">4</div>
@@ -634,7 +648,7 @@
             <span class="btn primary">保存</span>
             <span class="btn ghost">キャンセル</span>
           </div>
-          <p class="modal-annotation">statusをdoneに変更する瞬間だけ実績の工数の入力が必須になり、保存時にcompleted_atが自動セットされる(ADR-0008)。doneから戻すとcompleted_atはNULLに戻る(ADR-0013)。工数は0.5時間刻みの小数、0.5〜9999の範囲(ADR-0019)</p>
+          <p class="modal-annotation">statusをdoneに変更する瞬間だけ実績の工数の入力が必須になり、保存時にcompleted_atが自動セットされる(ADR-0008)。doneから戻すとcompleted_atはNULLに戻る(ADR-0013)。工数は0.5時間刻みの小数、0.5〜9999の範囲(ADR-0019)。編集対象が子タスクの場合はリスト欄自体を表示しない(子タスクはlist_idを持てないため、ADR-0021)</p>
         </div>
       </div>
     </div>
@@ -700,6 +714,51 @@
     </div>
   </section>
 
+  <!-- ============ M-04 リスト管理モーダル ============ -->
+  <section id="scr-m04" role="tabpanel" aria-labelledby="tab-m04" hidden>
+    <div class="screen-meta">
+      <h2>M-04 リスト管理モーダル</h2>
+      <span class="pill need">認証: 必要</span>
+      <span class="pill">S-03に重ねて表示</span>
+    </div>
+    <p class="api-refs">LIST-01 <code>GET /lists</code> ・ LIST-02 <code>POST /lists</code> ・ LIST-03 <code>PATCH /lists/{id}</code> ・ LIST-04 <code>DELETE /lists/{id}</code></p>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;S-03 の上に M-04</div>
+      <div class="frame-body modal-scene">
+        <div class="backdrop-screen">
+          <div class="list-head">
+            <div class="filter-row"><span class="box">リスト: すべて ▾</span></div>
+            <span class="btn primary">+ 新規タスク作成</span>
+          </div>
+        </div>
+        <div class="modal-overlay-tint"></div>
+        <div class="modal-box">
+          <div class="modal-head">
+            <h3>リストを管理</h3>
+            <span class="modal-close">✕ 閉じる</span>
+          </div>
+          <div class="field">
+            <label>新しいリスト名</label>
+            <div class="box" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+              <span>&nbsp;</span>
+              <span class="btn small primary">+ 追加</span>
+            </div>
+          </div>
+          <div class="child-row">
+            <span class="left">プロジェクトA</span>
+            <span class="btn-row" style="margin:0;"><span class="link">✎ 編集</span><span class="link" style="color:var(--danger);">🗑 削除</span></span>
+          </div>
+          <div class="child-row">
+            <span class="left">プロジェクトB</span>
+            <span class="btn-row" style="margin:0;"><span class="link">✎ 編集</span><span class="link" style="color:var(--danger);">🗑 削除</span></span>
+          </div>
+          <p class="modal-annotation">「✎ 編集」を押すとその行がリスト名の入力欄に差し替わり、保存でPATCH /lists/{id}を呼ぶ。「🗑 削除」は確認ダイアログを経由してDELETE /lists/{id}を呼ぶ。リストを削除してもタスクは消えず、所属していたタスクのlist_idがnullに戻るだけ(ON DELETE SET NULL、ADR-0021)。新規作成はPOST /listsで、作成後は一覧に追記されS-03のリスト絞り込みドロップダウンの選択肢にも反映される</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <footer class="note">
     <strong>読み方:</strong> 実線の枠は画面自体、破線の枠は入力欄やプレースホルダを表す。差し色(青)はクリック可能な操作(ボタン・リンク・選択中の値・▸▾の展開矢印)を示す。タスクの作成・編集・詳細確認はすべてモーダル方式(docs/assignment/step4.mdの「設計判断の背景」参照)であることを示すため、呼び出し元の画面を薄暗くした背景の上に重ねて描いている。画面一覧の詳細は <span class="mono">docs/SCREEN_LIST.md</span>、遷移の詳細は <span class="mono">docs/SCREEN_FLOW.md</span>、Step4提出後の変更点は <span class="mono">docs/assignment/step5.md</span> を参照。
   </footer>
@@ -707,7 +766,7 @@
 
 <script>
 (function () {
-  var tabs = ['s01','s02','s03','m01','m02','m03'].map(function (id) {
+  var tabs = ['s01','s02','s03','m01','m02','m03','m04'].map(function (id) {
     return { id: id, btn: document.getElementById('tab-' + id), panel: document.getElementById('scr-' + id) };
   });
   function activate(t) {
