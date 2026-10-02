@@ -164,7 +164,7 @@ Step4の課題ページ([final-challenge/app/step4](https://devopscamp.reheartcl
 
 ## フロントエンド2・実装 (Step 5-6)
 
-未着手。着手時にこのセクションへ画面設計の詳細・セットアップ手順を追記する。Step4提出後の画面設計の変更点は[docs/assignment/step5.md](./docs/assignment/step5.md)を参照。
+未着手。着手時にこのセクションへ画面設計の詳細・セットアップ手順を追記する。Step4提出後の画面設計の変更点は[docs/assignment/step5.md](./docs/assignment/step5.md)を参照。ワイヤーフレーム・画面フローマップは[docs/design/](./docs/design/README.md)で管理している。
 
 ## インフラ・コンテナ・CI/CD (Step 7-11)
 

@@ -25,7 +25,7 @@ func Load() (Config, error) {
 		Port:      getEnv("PORT", "8080"),
 		MySQLDSN:  getEnv("MYSQL_DSN", "root@tcp(127.0.0.1:3306)/devops_camp?parseTime=true&charset=utf8mb4"),
 		JWTSecret: []byte(jwtSecret),
-		TokenTTL:  time.Hour,
+		TokenTTL:  7 * 24 * time.Hour,
 	}, nil
 }
 

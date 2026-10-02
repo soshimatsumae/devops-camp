@@ -1,0 +1,747 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>画面ワイヤーフレーム</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  :root {
+    --paper: #f7f4ec;
+    --surface: #fffdf7;
+    --ink: #2b2a26;
+    --ink-soft: #6b6a63;
+    --line: #8a887e;
+    --line-soft: #c8c4b6;
+    --accent: #2f6f8f;
+    --accent-soft: #dbe9ef;
+    --accent-ink: #fffdf7;
+    --danger: #9b4d3f;
+    --shadow: 2px 2px 0 rgba(43,42,38,0.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1b1b18;
+      --surface: #242420;
+      --ink: #eae6da;
+      --ink-soft: #a6a296;
+      --line: #8a8a7d;
+      --line-soft: #45453e;
+      --accent: #7fc4e8;
+      --accent-soft: #2a3d45;
+      --accent-ink: #16232a;
+      --danger: #e0917f;
+      --shadow: 2px 2px 0 rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1b1b18;
+    --surface: #242420;
+    --ink: #eae6da;
+    --ink-soft: #a6a296;
+    --line: #8a8a7d;
+    --line-soft: #45453e;
+    --accent: #7fc4e8;
+    --accent-soft: #2a3d45;
+    --accent-ink: #16232a;
+    --danger: #e0917f;
+    --shadow: 2px 2px 0 rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Caveat', 'Segoe Print', cursive;
+    padding: 0 20px;
+    padding-block: 40px 72px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: 0.02em; }
+
+  header.page { margin-bottom: 24px; }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 8px;
+  }
+  h1 {
+    font-size: clamp(1.9rem, 5vw, 2.5rem);
+    font-weight: 700;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+  .lede {
+    color: var(--ink-soft);
+    font-size: 1.15rem;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 68ch;
+  }
+  .note-strip {
+    margin-top: 16px;
+    border: 2px dashed var(--line);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    background: var(--surface);
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 26px 0 22px;
+    border-bottom: 2px solid var(--line-soft);
+    padding-bottom: 10px;
+  }
+  .tab-btn {
+    font-family: 'Caveat', cursive;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: var(--surface);
+    border: 2px solid var(--line-soft);
+    border-radius: 6px;
+    padding: 6px 14px;
+    cursor: pointer;
+  }
+  .tab-btn .mono { font-size: 0.7rem; display: block; opacity: 0.8; margin-top: 1px; }
+  .tab-btn[aria-selected="true"] {
+    color: var(--accent-ink);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .screen-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .screen-meta h2 { font-size: 1.6rem; margin: 0; font-weight: 700; }
+  .pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    padding: 2px 9px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .pill.need { border-color: var(--accent); color: var(--accent); }
+  .api-refs { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--ink-soft); margin: 0 0 18px; }
+  .api-refs code { color: var(--ink); }
+
+  /* device frame */
+  .frame {
+    position: relative;
+    border: 2.5px solid var(--ink);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    padding: 0;
+    overflow: hidden;
+  }
+  .frame-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px solid var(--ink);
+    padding: 7px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+  }
+  .frame-bar .dot { width: 8px; height: 8px; border: 1.5px solid var(--ink-soft); border-radius: 50%; }
+  .frame-body { padding: 22px 24px 26px; }
+
+  /* generic wireframe primitives */
+  .box {
+    border: 2px dashed var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    background: transparent;
+  }
+  .box-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.03em;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .field .box { min-height: 34px; display: flex; align-items: center; font-size: 0.95rem; color: var(--ink-soft); }
+
+  .btn {
+    display: inline-block;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-size: 1.15rem;
+    font-weight: 600;
+    background: transparent;
+    color: var(--ink);
+    cursor: default;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.ghost { border-style: dashed; color: var(--ink-soft); }
+  .btn.danger { border-color: var(--danger); color: var(--danger); }
+  .btn.small { padding: 3px 10px; font-size: 0.95rem; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+
+  .link {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    font-size: 1.1rem;
+    cursor: default;
+  }
+
+  .center-card {
+    max-width: 340px;
+    margin: 10px auto 0;
+  }
+  .center-card h3 { text-align: center; font-size: 1.7rem; margin: 0 0 16px; }
+
+  .error-box {
+    border: 2px dashed var(--danger);
+    color: var(--danger);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+
+  /* common header used in S-03 */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 18px;
+  }
+  .app-header .brand { font-size: 1.35rem; font-weight: 700; }
+  .app-header nav { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin: 20px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after { content: ""; flex: 1; border-bottom: 1.5px dashed var(--line-soft); }
+
+  /* heatmap */
+  .heatmap-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  .heatmap-hint { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--ink-soft); margin: 0 0 14px; }
+  .heatmap-wrap { overflow-x: auto; padding-bottom: 4px; }
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(26, 14px);
+    grid-auto-rows: 14px;
+    gap: 3px;
+    width: max-content;
+  }
+  .heatmap-grid .cell {
+    width: 14px; height: 14px;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--surface);
+  }
+  .heatmap-grid .cell.w1 { background: var(--accent-soft); }
+  .heatmap-grid .cell.w2 { background: color-mix(in srgb, var(--accent) 40%, var(--surface)); }
+  .heatmap-grid .cell.w3 { background: color-mix(in srgb, var(--accent) 65%, var(--surface)); }
+  .heatmap-grid .cell.w4 { background: color-mix(in srgb, var(--accent) 88%, var(--surface)); }
+  .heatmap-legend { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 0.85rem; color: var(--ink-soft); }
+  .heatmap-legend .cell { width: 12px; height: 12px; display: inline-block; border: 1px solid var(--line); border-radius: 2px; }
+
+  /* task list */
+  .filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .filter-row .box { padding: 6px 10px; font-size: 0.9rem; }
+  .task-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    border: 2px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+  }
+  .task-row .left { display: flex; align-items: center; gap: 8px; }
+  .task-row .caret { font-family: 'IBM Plex Mono', monospace; color: var(--accent); width: 1em; display: inline-block; }
+  .task-row .title { font-size: 1.2rem; }
+  .task-row .meta { display: flex; gap: 8px; align-items: center; font-size: 0.8rem; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; }
+  .status-tag { border: 1.5px solid var(--line); border-radius: 4px; padding: 1px 7px; }
+  .status-tag.done { border-color: var(--accent); color: var(--accent); }
+  .nested-1 { margin-left: 28px; }
+  .nested-2 { margin-left: 56px; }
+  .list-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+  .pagination { display: flex; gap: 6px; justify-content: center; margin-top: 16px; font-family: 'IBM Plex Mono', monospace; }
+  .pagination span { border: 1.5px solid var(--line); border-radius: 4px; padding: 3px 9px; font-size: 0.8rem; color: var(--ink-soft); }
+  .pagination span.current { border-color: var(--accent); color: var(--accent); }
+
+  /* detail */
+  .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px 20px; margin: 14px 0 18px; }
+  .kv .k { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: var(--ink-soft); display: block; }
+  .kv .v { font-size: 1.05rem; }
+  .child-row {
+    border: 2px dashed var(--line);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+  }
+  .child-row .left { display: flex; align-items: center; gap: 8px; }
+  .child-row .caret { font-family: 'IBM Plex Mono', monospace; color: var(--accent); width: 1em; display: inline-block; }
+
+  /* modal overlay screens */
+  .modal-scene { position: relative; min-height: 600px; }
+  .modal-scene .backdrop-screen {
+    filter: blur(0.4px);
+    opacity: 0.38;
+    pointer-events: none;
+  }
+  .modal-overlay-tint {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--ink) 12%, transparent);
+  }
+  .modal-box {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(92%, 380px);
+    max-height: calc(100% - 24px);
+    overflow-y: auto;
+    background: var(--surface);
+    border: 2.5px solid var(--ink);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    padding: 20px 22px;
+  }
+  .modal-box h3 { margin: 0 0 14px; font-size: 1.5rem; }
+  .modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .modal-close { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--ink-soft); border: 1.5px solid var(--line); border-radius: 4px; padding: 2px 8px; white-space: nowrap; }
+  .modal-annotation {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--ink-soft);
+    border-top: 1.5px dashed var(--line-soft);
+    margin-top: 12px;
+    padding-top: 8px;
+  }
+
+  .hours-input { display: flex; align-items: center; gap: 8px; }
+  .hours-input .box { max-width: 120px; }
+  .hours-input .unit { color: var(--ink-soft); font-size: 1rem; }
+
+  footer.note {
+    margin-top: 40px;
+    padding-top: 18px;
+    border-top: 2px dashed var(--line-soft);
+    color: var(--ink-soft);
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+
+  .export header.page, .export footer.note { display: none; }
+  .export body { padding-block: 24px; }
+
+  @media (max-width: 480px) {
+    .frame-body { padding: 16px 14px 20px; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .tabs { gap: 5px; }
+    .nested-1 { margin-left: 16px; }
+    .nested-2 { margin-left: 30px; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="page">
+    <p class="eyebrow">devops-camp / step5 wireframes</p>
+    <h1>画面ワイヤーフレーム</h1>
+    <p class="lede">docs/SCREEN_LIST.md・SCREEN_FLOW.mdで定義した6画面(S-01〜S-03、M-01〜M-03)を、線画のラフスケッチとして起こしたもの。配色・フォント・詳細レイアウトは未確定で、Step6実装時に決める。Step4提出後の変更(docs/assignment/step5.md参照)を反映済み。</p>
+    <p class="note-strip">✎ これはワイヤーフレームです。画面の要素配置と情報の粒度だけを検討する段階のスケッチであり、最終的な見た目ではありません。</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab-btn" role="tab" id="tab-s01" aria-selected="true" aria-controls="scr-s01">S-01<span class="mono">ログイン</span></button>
+      <button class="tab-btn" role="tab" id="tab-s02" aria-selected="false" aria-controls="scr-s02">S-02<span class="mono">新規登録</span></button>
+      <button class="tab-btn" role="tab" id="tab-s03" aria-selected="false" aria-controls="scr-s03">S-03<span class="mono">ダッシュボード</span></button>
+      <button class="tab-btn" role="tab" id="tab-m01" aria-selected="false" aria-controls="scr-m01">M-01<span class="mono">作成モーダル</span></button>
+      <button class="tab-btn" role="tab" id="tab-m02" aria-selected="false" aria-controls="scr-m02">M-02<span class="mono">編集モーダル</span></button>
+      <button class="tab-btn" role="tab" id="tab-m03" aria-selected="false" aria-controls="scr-m03">M-03<span class="mono">詳細モーダル</span></button>
+    </div>
+  </header>
+
+  <!-- ============ S-01 ログイン画面 ============ -->
+  <section id="scr-s01" role="tabpanel" aria-labelledby="tab-s01">
+    <div class="screen-meta">
+      <h2>S-01 ログイン画面</h2>
+      <span class="pill">認証: 不要</span>
+    </div>
+    <p class="api-refs">AUTH-02 <code>POST /auth/login</code></p>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;S-01</div>
+      <div class="frame-body">
+        <div class="center-card">
+          <h3>ログイン</h3>
+          <div class="field">
+            <label>メールアドレス</label>
+            <div class="box">taro@example.com</div>
+          </div>
+          <div class="field">
+            <label>パスワード</label>
+            <div class="box">••••••••</div>
+          </div>
+          <div class="error-box">エラーメッセージ表示領域(例: メールアドレスまたはパスワードが正しくありません)</div>
+          <div class="btn-row" style="justify-content:center;">
+            <span class="btn primary">ログイン</span>
+          </div>
+          <p style="text-align:center; margin-top:16px;">アカウントがない方は <span class="link">新規登録はこちら →</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S-02 新規登録画面 ============ -->
+  <section id="scr-s02" role="tabpanel" aria-labelledby="tab-s02" hidden>
+    <div class="screen-meta">
+      <h2>S-02 新規登録画面</h2>
+      <span class="pill">認証: 不要</span>
+    </div>
+    <p class="api-refs">AUTH-01 <code>POST /auth/register</code></p>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;S-02</div>
+      <div class="frame-body">
+        <div class="center-card">
+          <h3>新規登録</h3>
+          <div class="field">
+            <label>お名前</label>
+            <div class="box">太郎</div>
+          </div>
+          <div class="field">
+            <label>メールアドレス</label>
+            <div class="box">taro@example.com</div>
+          </div>
+          <div class="field">
+            <label>パスワード(8文字以上)</label>
+            <div class="box">••••••••</div>
+          </div>
+          <div class="error-box">エラーメッセージ表示領域(例: このメールアドレスは既に使われています)</div>
+          <div class="btn-row" style="justify-content:center;">
+            <span class="btn primary">登録する</span>
+          </div>
+          <p style="text-align:center; margin-top:16px;">アカウントをお持ちの方は <span class="link">ログインはこちら →</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S-03 ダッシュボード画面(カレンダー+タスク一覧) ============ -->
+  <section id="scr-s03" role="tabpanel" aria-labelledby="tab-s03" hidden>
+    <div class="screen-meta">
+      <h2>S-03 ダッシュボード画面(カレンダー+タスク一覧)</h2>
+      <span class="pill need">認証: 必要</span>
+      <span class="pill">ログイン後の着地画面</span>
+    </div>
+    <p class="api-refs">TASK-06 <code>GET /tasks/calendar</code> ・ TASK-01 <code>GET /tasks</code></p>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;S-03</div>
+      <div class="frame-body">
+        <div class="app-header">
+          <span class="brand">見積もり振り返り</span>
+          <nav>
+            <span class="btn ghost" style="padding:4px 12px; font-size:1rem;">ログアウト</span>
+          </nav>
+        </div>
+
+        <div class="section-label">頑張りの可視化(上段・固定表示)</div>
+        <div class="heatmap-toolbar">
+          <span style="font-size:1rem; color:var(--ink-soft);">開始日</span>
+          <span class="box" style="padding:5px 10px; font-size:0.9rem;">YYYY-MM-DD</span>
+          <span style="font-size:1rem; color:var(--ink-soft);">終了日</span>
+          <span class="box" style="padding:5px 10px; font-size:0.9rem;">YYYY-MM-DD</span>
+          <span class="btn ghost" style="padding:4px 12px; font-size:1rem;">この期間で表示</span>
+        </div>
+        <p class="heatmap-hint">未指定時はログイン時点の年の1/1以降で最初に来る日曜日を起点に53週間分を表示(年によって曜日の列がズレないため)</p>
+
+        <div class="heatmap-wrap">
+          <div class="heatmap-grid" id="heatmapGrid"></div>
+        </div>
+        <div class="heatmap-legend">
+          少ない <span class="cell"></span><span class="cell" style="background:var(--accent-soft)"></span><span class="cell" style="background:color-mix(in srgb, var(--accent) 65%, var(--surface))"></span><span class="cell" style="background:color-mix(in srgb, var(--accent) 88%, var(--surface))"></span> 多い(その日の実績工数合計・時間)
+        </div>
+
+        <div class="section-label">タスク一覧(下段・スクロール)</div>
+        <div class="list-head">
+          <div class="filter-row">
+            <span class="box">status: すべて ▾</span>
+          </div>
+          <span class="btn primary">+ 新規タスク作成</span>
+        </div>
+
+        <div class="task-row">
+          <span class="left"><span class="caret">▸</span><span class="title">ER図を作成する</span></span>
+          <span class="meta"><span class="status-tag">todo</span>想定:3h 実績:-</span>
+        </div>
+        <div class="task-row">
+          <span class="left"><span class="caret">▾</span><span class="title">画面遷移図をレビューしてもらう</span></span>
+          <span class="meta"><span class="status-tag">in_progress</span>想定:2h 実績:-</span>
+        </div>
+        <div class="task-row nested-1">
+          <span class="left"><span class="caret">▸</span><span class="title" style="font-size:1.05rem;">レビュー指摘を反映する</span></span>
+          <span class="meta"><span class="status-tag">todo</span>想定:1h 実績:-</span>
+        </div>
+        <div class="task-row">
+          <span class="left"><span class="caret">▸</span><span class="title">DB仕様書を修正する</span></span>
+          <span class="meta"><span class="status-tag done">done</span>想定:3h 実績:4h</span>
+        </div>
+
+        <div class="pagination"><span>&lt;</span><span class="current">1</span><span>2</span><span>3</span><span>&gt;</span></div>
+        <p class="modal-annotation" style="border-top:none; margin-top:14px;">デフォルトは親タスク(parent_id=null)のみ表示。行の▸をクリックするとparent_id指定で子タスクを取得してその場に展開(▾)、子タスクの▸をクリックすると孫タスクも同様に展開する</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ M-01 タスク作成モーダル ============ -->
+  <section id="scr-m01" role="tabpanel" aria-labelledby="tab-m01" hidden>
+    <div class="screen-meta">
+      <h2>M-01 タスク作成モーダル</h2>
+      <span class="pill need">認証: 必要</span>
+      <span class="pill">S-03・M-03に重ねて表示</span>
+    </div>
+    <p class="api-refs">TASK-02 <code>POST /tasks</code></p>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;S-03 の上に M-01</div>
+      <div class="frame-body modal-scene">
+        <div class="backdrop-screen">
+          <div class="list-head">
+            <div class="filter-row"><span class="box">status: すべて ▾</span></div>
+            <span class="btn primary">+ 新規タスク作成</span>
+          </div>
+          <div class="task-row"><span class="left"><span class="caret">▸</span><span class="title">ER図を作成する</span></span><span class="meta"><span class="status-tag">todo</span></span></div>
+          <div class="task-row"><span class="left"><span class="caret">▸</span><span class="title">画面遷移図をレビューしてもらう</span></span><span class="meta"><span class="status-tag">in_progress</span></span></div>
+        </div>
+        <div class="modal-overlay-tint"></div>
+        <div class="modal-box">
+          <div class="modal-head">
+            <h3>新規タスク作成</h3>
+            <span class="modal-close">✕ 閉じる</span>
+          </div>
+          <div class="field">
+            <label>タイトル(必須)</label>
+            <div class="box">&nbsp;</div>
+          </div>
+          <div class="field">
+            <label>詳細</label>
+            <div class="box" style="min-height:52px;">&nbsp;</div>
+          </div>
+          <div class="field">
+            <label>想定の工数(必須、時間)</label>
+            <div class="hours-input">
+              <div class="box">1.5</div>
+              <span class="unit">時間</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>締切日</label>
+            <div class="box">YYYY-MM-DD</div>
+          </div>
+          <div class="btn-row">
+            <span class="btn primary">作成</span>
+            <span class="btn ghost">キャンセル</span>
+          </div>
+          <p class="modal-annotation">M-03(タスク詳細モーダル)から「子タスクを追加」で開いた場合はここに「子タスクとして作成します(親: ○○)」の一文を表示し、parent_idを引き継ぐ。その場合list_idの指定欄は表示しない(子タスクはlist_idを持てないため、ADR-0021)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ M-02 タスク編集モーダル ============ -->
+  <section id="scr-m02" role="tabpanel" aria-labelledby="tab-m02" hidden>
+    <div class="screen-meta">
+      <h2>M-02 タスク編集モーダル</h2>
+      <span class="pill need">認証: 必要</span>
+      <span class="pill">M-03に重ねて表示</span>
+    </div>
+    <p class="api-refs">TASK-04 <code>PATCH /tasks/{id}</code></p>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;M-03 の上に M-02</div>
+      <div class="frame-body modal-scene">
+        <div class="backdrop-screen">
+          <h3 style="font-size:1.6rem; margin:6px 0;">ER図を作成する</h3>
+          <div class="btn-row"><span class="btn">編集</span><span class="btn">子タスクを追加</span><span class="btn danger">削除</span></div>
+        </div>
+        <div class="modal-overlay-tint"></div>
+        <div class="modal-box">
+          <div class="modal-head">
+            <h3>タスクを編集</h3>
+            <span class="modal-close">✕ 閉じる</span>
+          </div>
+          <div class="field">
+            <label>タイトル</label>
+            <div class="box">ER図を作成する</div>
+          </div>
+          <div class="field">
+            <label>ステータス</label>
+            <div class="box" style="border-color:var(--accent); color:var(--accent);">done ▾</div>
+          </div>
+          <div class="field">
+            <label>実績の工数(statusをdoneにする場合は必須、時間)</label>
+            <div class="hours-input">
+              <div class="box">4</div>
+              <span class="unit">時間</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>締切日</label>
+            <div class="box">2026-09-10</div>
+          </div>
+          <div class="btn-row">
+            <span class="btn primary">保存</span>
+            <span class="btn ghost">キャンセル</span>
+          </div>
+          <p class="modal-annotation">statusをdoneに変更する瞬間だけ実績の工数の入力が必須になり、保存時にcompleted_atが自動セットされる(ADR-0008)。doneから戻すとcompleted_atはNULLに戻る(ADR-0013)。工数は0.5時間刻みの小数、0.5〜9999の範囲(ADR-0019)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ M-03 タスク詳細モーダル ============ -->
+  <section id="scr-m03" role="tabpanel" aria-labelledby="tab-m03" hidden>
+    <div class="screen-meta">
+      <h2>M-03 タスク詳細モーダル</h2>
+      <span class="pill need">認証: 必要</span>
+      <span class="pill">S-03に重ねて表示</span>
+    </div>
+    <p class="api-refs">TASK-03 <code>GET /tasks/{id}</code> ・ TASK-01 <code>GET /tasks</code>(子孫展開) ・ TASK-05 <code>DELETE /tasks/{id}</code></p>
+
+    <div class="frame">
+      <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;S-03 の上に M-03</div>
+      <div class="frame-body modal-scene">
+        <div class="backdrop-screen">
+          <div class="list-head">
+            <div class="filter-row"><span class="box">status: すべて ▾</span></div>
+            <span class="btn primary">+ 新規タスク作成</span>
+          </div>
+          <div class="task-row"><span class="left"><span class="caret">▸</span><span class="title">ER図を作成する</span></span><span class="meta"><span class="status-tag">todo</span></span></div>
+        </div>
+        <div class="modal-overlay-tint"></div>
+        <div class="modal-box">
+          <div class="modal-head">
+            <h3 style="font-size:1.5rem;">ER図を作成する <span class="status-tag" style="font-size:0.85rem; vertical-align:middle;">todo</span></h3>
+            <span class="modal-close">✕ 閉じる</span>
+          </div>
+          <div class="box" style="margin:0 0 16px;">DBの各テーブルの関係をmermaidで図にする。usersとtasksの1:多、tasksの自己参照を含む。</div>
+
+          <div class="detail-grid">
+            <div class="kv"><span class="k">ESTIMATED_HOURS</span><span class="v">3時間</span></div>
+            <div class="kv"><span class="k">ACTUAL_HOURS</span><span class="v">-</span></div>
+            <div class="kv"><span class="k">DUE_DATE</span><span class="v">2026-09-10</span></div>
+            <div class="kv"><span class="k">COMPLETED_AT</span><span class="v">-</span></div>
+          </div>
+
+          <div class="btn-row">
+            <span class="btn">編集</span>
+            <span class="btn">子タスクを追加</span>
+            <span class="btn danger">削除</span>
+          </div>
+
+          <h4 style="margin:22px 0 10px; font-size:1.3rem;">子タスク</h4>
+          <div class="child-row">
+            <span class="left"><span class="caret">▾</span><span>ヒアリング項目を洗い出す</span></span>
+            <span class="status-tag done" style="font-size:0.8rem;">done</span>
+          </div>
+          <div class="child-row" style="margin-left:24px;">
+            <span class="left"><span class="caret">▸</span><span style="font-size:0.92rem;">一次ヒアリングメモをまとめる</span></span>
+            <span class="status-tag" style="font-size:0.8rem;">todo</span>
+          </div>
+          <div class="child-row">
+            <span class="left"><span class="caret">▸</span><span>mermaid記法を確認する</span></span>
+            <span class="status-tag" style="font-size:0.8rem;">todo</span>
+          </div>
+
+          <p class="modal-annotation">子タスク行の▸をクリックすると、モーダルを差し替えずその場で孫タスクをインライン展開する(GET /tasks?parent_id=子のID)。以前検討していた「子タスク自身の詳細へ遷移する」方式(M-03→M-03の自己遷移)からの方針変更(docs/assignment/step5.md「4-2」参照)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="note">
+    <strong>読み方:</strong> 実線の枠は画面自体、破線の枠は入力欄やプレースホルダを表す。差し色(青)はクリック可能な操作(ボタン・リンク・選択中の値・▸▾の展開矢印)を示す。タスクの作成・編集・詳細確認はすべてモーダル方式(docs/assignment/step4.mdの「設計判断の背景」参照)であることを示すため、呼び出し元の画面を薄暗くした背景の上に重ねて描いている。画面一覧の詳細は <span class="mono">docs/SCREEN_LIST.md</span>、遷移の詳細は <span class="mono">docs/SCREEN_FLOW.md</span>、Step4提出後の変更点は <span class="mono">docs/assignment/step5.md</span> を参照。
+  </footer>
+</div>
+
+<script>
+(function () {
+  var tabs = ['s01','s02','s03','m01','m02','m03'].map(function (id) {
+    return { id: id, btn: document.getElementById('tab-' + id), panel: document.getElementById('scr-' + id) };
+  });
+  function activate(t) {
+    tabs.forEach(function (other) {
+      var active = other === t;
+      other.btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      other.panel.hidden = !active;
+    });
+  }
+  tabs.forEach(function (t) {
+    t.btn.addEventListener('click', function () { activate(t); });
+  });
+
+  // #s03 opens that tab; #export-s03 also hides the page chrome for image export
+  var hash = location.hash.replace('#', '');
+  if (hash.indexOf('export-') === 0) {
+    document.documentElement.classList.add('export');
+    hash = hash.slice(7);
+  }
+  tabs.forEach(function (t) { if (t.id === hash) activate(t); });
+
+  // build a GitHub-style heatmap grid with a handful of "weighted" days
+  var grid = document.getElementById('heatmapGrid');
+  if (grid) {
+    var weighted = { 12: 1, 13: 2, 14: 1, 30: 3, 31: 4, 32: 2, 58: 1, 90: 2, 91: 3, 130: 1, 131: 1, 160: 4, 161: 2 };
+    var total = 26 * 7;
+    var html = '';
+    for (var i = 0; i < total; i++) {
+      var w = weighted[i];
+      html += '<div class="cell' + (w ? ' w' + w : '') + '"></div>';
+    }
+    grid.innerHTML = html;
+  }
+})();
+</script>
+
+</body></html>

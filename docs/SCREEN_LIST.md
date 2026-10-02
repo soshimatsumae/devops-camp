@@ -13,6 +13,8 @@ Step4提出物。バックエンドAPI([docs/API_SPEC.md](./API_SPEC.md))に対�
 | 対応するAPIエンドポイント | AUTH-02(`POST /auth/login`) |
 | 認証要否 | 不要 |
 
+![S-01 ワイヤーフレーム](./design/images/wireframe-s01.png)
+
 ### S-02: 新規登録画面
 
 | 項目 | 内容 |
@@ -21,6 +23,8 @@ Step4提出物。バックエンドAPI([docs/API_SPEC.md](./API_SPEC.md))に対�
 | 主要なUI要素/入力項目 | email入力欄、password入力欄(8文字以上)、name入力欄、登録ボタン、ログイン画面へのリンク、エラーメッセージ表示領域 |
 | 対応するAPIエンドポイント | AUTH-01(`POST /auth/register`) |
 | 認証要否 | 不要 |
+
+![S-02 ワイヤーフレーム](./design/images/wireframe-s02.png)
 
 ### S-03: ダッシュボード画面(カレンダー+タスク一覧)
 
@@ -33,6 +37,8 @@ Step4提出物。バックエンドAPI([docs/API_SPEC.md](./API_SPEC.md))に対�
 | 対応するAPIエンドポイント | TASK-06(`GET /tasks/calendar`)、TASK-01(`GET /tasks`) |
 | 認証要否 | 必要 |
 
+![S-03 ワイヤーフレーム](./design/images/wireframe-s03.png)
+
 ### M-03: タスク詳細モーダル
 
 S-03のタスク行をクリックすると開く、S-03の上に重ねて表示するモーダル。画面遷移を発生させずにタスク詳細を確認できるようにするため、独立した画面(旧S-05)ではなくモーダルとして設計している。モーダル内の子タスク行をクリックすると、S-03のタスク一覧と同じ「クリックで1階層ずつ展開」方式でその場にインライン展開し(`GET /tasks?parent_id=子タスクのID`)、孫タスク以下もモーダルを閉じずに辿っていける。
@@ -43,6 +49,8 @@ S-03のタスク行をクリックすると開く、S-03の上に重ねて表示
 | 主要なUI要素/入力項目 | タイトル・詳細・ステータス・想定/実績の工数・締切日・完了日時の表示、子タスク一覧(行クリックでその子タスクの下に孫タスクをインライン展開、さらにクリックで曾孫タスクも同様に展開)、「編集」ボタン(→M-02)、「子タスクを追加」ボタン(→M-01)、「削除」ボタン(確認ダイアログ経由)、閉じるボタン |
 | 対応するAPIエンドポイント | TASK-03(`GET /tasks/{id}`)、TASK-01(`GET /tasks`、子タスク展開時の`parent_id`フィルタ用)、TASK-05(`DELETE /tasks/{id}`) |
 | 認証要否 | 必要 |
+
+![M-03 ワイヤーフレーム](./design/images/wireframe-m03.png)
 
 ### M-01: タスク作成モーダル
 
@@ -55,6 +63,8 @@ S-03・M-03の上に重ねて表示するモーダル。M-03から開いた場�
 | 対応するAPIエンドポイント | TASK-02(`POST /tasks`) |
 | 認証要否 | 必要 |
 
+![M-01 ワイヤーフレーム](./design/images/wireframe-m01.png)
+
 ### M-02: タスク編集モーダル
 
 M-03の上に重ねて表示するモーダル。完了処理(`status`を`done`に変更)もここで行う。
@@ -65,3 +75,5 @@ M-03の上に重ねて表示するモーダル。完了処理(`status`を`done`�
 | 主要なUI要素/入力項目 | title/description/due_date編集欄、statusセレクト(todo/in_progress/done)、actual_hours入力(時間単位の小数、0.5刻み、statusをdoneにする場合必須)、保存ボタン、キャンセルボタン |
 | 対応するAPIエンドポイント | TASK-04(`PATCH /tasks/{id}`) |
 | 認証要否 | 必要 |
+
+![M-02 ワイヤーフレーム](./design/images/wireframe-m02.png)

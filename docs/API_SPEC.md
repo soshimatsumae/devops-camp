@@ -134,7 +134,7 @@ Authorization: Bearer <access_token>
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "token_type": "Bearer",
-  "expires_in": 3600
+  "expires_in": 604800
 }
 ```
 
