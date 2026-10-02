@@ -7,17 +7,34 @@ CHROME="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DESIGN="$ROOT/docs/design"
 OUT="$DESIGN/images"
-PROFILE="$(mktemp -d)"
-trap 'rm -rf "$PROFILE"' EXIT
 
 mkdir -p "$OUT"
 
 shot() {
   local url="$1" size="$2" file="$3"
-  "$CHROME" --headless=new --disable-gpu --hide-scrollbars \
-    --user-data-dir="$PROFILE" --virtual-time-budget=5000 \
-    --window-size="$size" --screenshot="$OUT/$file" "$url" >/dev/null 2>&1
-  echo "wrote docs/design/images/$file"
+  local profile
+  profile="$(mktemp -d)"
+
+  # --headless=new はスクリーンショット撮影後に自動終了しないことがあるため、
+  # 旧来の --headless を使う。さらに、万一ハングしても20秒で強制終了する
+  # ウォッチドッグを付けて、スクリプト全体が固まらないようにする。
+  "$CHROME" --headless --disable-gpu --hide-scrollbars \
+    --user-data-dir="$profile" --virtual-time-budget=5000 \
+    --window-size="$size" --screenshot="$OUT/$file" "$url" >/dev/null 2>&1 &
+  local pid=$!
+  ( sleep 20; kill "$pid" 2>/dev/null || true ) &
+  local watchdog=$!
+
+  wait "$pid" 2>/dev/null || true
+  kill "$watchdog" 2>/dev/null || true
+  wait "$watchdog" 2>/dev/null || true
+  rm -rf "$profile"
+
+  if [ -s "$OUT/$file" ]; then
+    echo "wrote docs/design/images/$file"
+  else
+    echo "failed: docs/design/images/$file (タイムアウトまたはエラー)" >&2
+  fi
 }
 
 shot "file://$DESIGN/flowmap.html#export" "1860,1740" "flowmap.png"
