@@ -304,6 +304,9 @@
   .pagination { display: flex; gap: 6px; justify-content: center; margin-top: 16px; font-family: 'IBM Plex Mono', monospace; }
   .pagination span { border: 1.5px solid var(--line); border-radius: 4px; padding: 3px 9px; font-size: 0.8rem; color: var(--ink-soft); }
   .pagination span.current { border-color: var(--accent); color: var(--accent); }
+  .list-group { margin-bottom: 18px; }
+  .list-group-head { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 600; color: var(--ink-soft); margin: 14px 0 8px; }
+  .list-group-head .count { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; border: 1.5px solid var(--line-soft); border-radius: 999px; padding: 1px 8px; }
 
   /* detail */
   .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px 20px; margin: 14px 0 18px; }
@@ -516,26 +519,40 @@
           <span class="btn primary">+ 新規タスク作成</span>
         </div>
 
-        <div class="task-row">
-          <span class="left"><span class="caret">▸</span><span class="title">ER図を作成する</span></span>
-          <span class="meta"><span class="status-tag">todo</span>想定:3h 実績:-</span>
-        </div>
-        <div class="task-row">
-          <span class="left"><span class="caret">▾</span><span class="title">画面遷移図をレビューしてもらう</span></span>
-          <span class="meta"><span class="status-tag">in_progress</span>想定:2h 実績:-</span>
-        </div>
-        <div class="task-row nested-1">
-          <span class="left"><span class="caret">▸</span><span class="title" style="font-size:1.05rem;">レビュー指摘を反映する</span></span>
-          <span class="meta"><span class="status-tag">todo</span>想定:1h 実績:-</span>
-        </div>
-        <div class="task-row">
-          <span class="left"><span class="caret">▸</span><span class="title">DB仕様書を修正する</span></span>
-          <span class="meta"><span class="status-tag done">done</span>想定:3h 実績:4h</span>
+        <div class="list-group">
+          <div class="list-group-head">📁 プロジェクトA <span class="count">2件</span></div>
+          <div class="task-row">
+            <span class="left"><span class="caret">▸</span><span class="title">ER図を作成する</span></span>
+            <span class="meta"><span class="status-tag">todo</span>想定:3h 実績:-</span>
+          </div>
+          <div class="task-row">
+            <span class="left"><span class="caret">▾</span><span class="title">画面遷移図をレビューしてもらう</span></span>
+            <span class="meta"><span class="status-tag">in_progress</span>想定:2h 実績:-</span>
+          </div>
+          <div class="task-row nested-1">
+            <span class="left"><span class="caret">▸</span><span class="title" style="font-size:1.05rem;">レビュー指摘を反映する</span></span>
+            <span class="meta"><span class="status-tag">todo</span>想定:1h 実績:-</span>
+          </div>
         </div>
 
-        <div class="pagination"><span>&lt;</span><span class="current">1</span><span>2</span><span>3</span><span>&gt;</span></div>
+        <div class="list-group">
+          <div class="list-group-head">📁 プロジェクトB <span class="count">0件</span></div>
+          <p class="modal-annotation" style="border-top:none; margin:0 0 4px;">該当タスクなし</p>
+        </div>
+
+        <div class="list-group">
+          <div class="list-group-head">未所属 <span class="count">1件</span></div>
+          <div class="task-row">
+            <span class="left"><span class="caret">▸</span><span class="title">DB仕様書を修正する</span></span>
+            <span class="meta"><span class="status-tag done">done</span>想定:3h 実績:4h</span>
+          </div>
+        </div>
+
         <p class="modal-annotation" style="border-top:none; margin-top:14px;">デフォルトは親タスク(parent_id=null)のみ表示。行の▸をクリックするとparent_id指定で子タスクを取得してその場に展開(▾)、子タスクの▸をクリックすると孫タスクも同様に展開する</p>
-        <p class="modal-annotation">キーワード検索(q)・リスト絞り込み(list_id)・並び替え(sort)はすべてGET /tasksのクエリパラメータとして送る。「⚙ リストを管理」はM-04(リスト管理モーダル)を開く。並び替えの選択肢は「新しい順(デフォルト)」「締切日順」「締切日逆順」「想定工数順」「想定工数逆順」の5つ(実績工数順は未完了タスクのactual_hoursがnullになるため対象外、ADR-0020)</p>
+        <p class="modal-annotation">キーワード検索(q)・並び替え(sort)はGET /tasksのクエリパラメータとして送る。「⚙ リストを管理」はM-04(リスト管理モーダル)を開く。並び替えの選択肢は「新しい順(デフォルト)」「締切日順」「締切日逆順」「想定工数順」「想定工数逆順」の5つ(実績工数順は未完了タスクのactual_hoursがnullになるため対象外、ADR-0020)</p>
+        <p class="modal-annotation">「リスト: すべて」のときはlist_idを指定せず`GET /tasks?per_page=100`を1回呼び、レスポンスに含まれるlist_idでクライアント側がセクション分けして表示する(上記のグループ表示。ページネーションはこのモードでは使わない)。特定のリスト名または「未所属」を選んだときだけ、そのlist_idで絞り込んだ従来通りのフラット表示+ページネーションになる(下のページネーションはそのときだけ表示)。親タスクが100件を超えるとグループ表示に乗らないタスクが出るため、その場合は絞り込みで対応する(docs/assignment/step5.md「7.」参照)</p>
+        <div class="pagination" style="margin-top:8px;"><span>&lt;</span><span class="current">1</span><span>2</span><span>3</span><span>&gt;</span></div>
+        <p class="modal-annotation" style="border-top:none; margin-top:4px;">↑ 特定のリストを選んだときのみ表示するページネーションの例</p>
       </div>
     </div>
   </section>
