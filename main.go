@@ -14,6 +14,7 @@ import (
 	"github.com/smatsumae/devops-camp/internal/config"
 	"github.com/smatsumae/devops-camp/internal/db"
 	"github.com/smatsumae/devops-camp/internal/handlers"
+	"github.com/smatsumae/devops-camp/internal/httpx"
 )
 
 func main() {
@@ -51,7 +52,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
-		Handler:           mux,
+		Handler:           httpx.CORS(cfg.CORSAllowedOrigins, mux),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,

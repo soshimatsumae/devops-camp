@@ -91,6 +91,7 @@ DevOpsキャンプ最終課題として開発する、見積もり振り返り�
    | `PORT` | `8080` | サーバーのリッスンポート |
    | `MYSQL_DSN` | `root@tcp(127.0.0.1:3306)/devops_camp?parseTime=true&charset=utf8mb4` | MySQL接続文字列。root にパスワードを設定している場合は `root:<password>@tcp(...)/...` の形で明示的に指定する(デフォルト値はパスワードなし前提) |
    | `JWT_SECRET` | `dev-secret-change-me` | JWT署名シークレット(本番相当で使う場合は必ず変更) |
+   | `CORS_ALLOWED_ORIGINS` | `http://localhost:3000,http://localhost:3001` | フロントエンド(別オリジン)からのアクセスを許可するオリジンのカンマ区切りリスト。`frontend`をこれ以外のポートで動かす場合は変更する |
 
 4. サーバーを起動する
 
