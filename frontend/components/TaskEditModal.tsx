@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ApiError, listLists, updateTask } from "@/lib/api";
 import type { Task, TaskList, TaskStatus } from "@/lib/types";
@@ -69,9 +70,10 @@ export default function TaskEditModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-zinc-400 hover:text-zinc-600"
+            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-600"
           >
-            ✕ 閉じる
+            <X className="h-3.5 w-3.5" />
+            閉じる
           </button>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 text-sm">

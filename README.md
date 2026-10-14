@@ -9,8 +9,8 @@ DevOpsキャンプ最終課題として開発する、見積もり振り返り�
 |---|---|---|
 | 1-2 | テーマ選定・API/DB仕様書 | 完了 |
 | 3 | バックエンド実装 | 完了 |
-| 4 | フロントエンド1(技術学習・画面設計) | 進行中 |
-| 5-6 | フロントエンド2・実装 | 未着手 |
+| 4 | フロントエンド1(技術学習・画面設計) | 完了 |
+| 5-6 | フロントエンド2・実装 | 進行中 |
 | 7-8 | インフラ(学習・設計・クラウド展開) | 未着手 |
 | 9-10 | コンテナ化(学習・運用移行) | 未着手 |
 | 11 | CI/CDパイプライン | 未着手 |
@@ -165,7 +165,7 @@ Step4の課題ページ([final-challenge/app/step4](https://devopscamp.reheartcl
 
 ## フロントエンド2・実装 (Step 5-6)
 
-未着手。着手時にこのセクションへ画面設計の詳細・セットアップ手順を追記する。Step4提出後の画面設計の変更点は[docs/assignment/step5.md](./docs/assignment/step5.md)を参照。ワイヤーフレーム・画面フローマップは[docs/design/](./docs/design/README.md)で管理している。
+Next.js(App Router)+ TypeScript + Tailwind CSSで`frontend/`配下にフロントエンドを実装した。セットアップ手順は[frontend/README.md](./frontend/README.md)を参照。Step4提出後の画面設計の変更点は[docs/assignment/step5.md](./docs/assignment/step5.md)、実装の詳細・提出物は[docs/assignment/step6.md](./docs/assignment/step6.md)を参照。ワイヤーフレーム・画面フローマップは[docs/design/](./docs/design/README.md)で管理している。
 
 ## インフラ・コンテナ・CI/CD (Step 7-11)
 

@@ -1,7 +1,9 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ApiError, deleteTask, getTask, listTasks } from "@/lib/api";
+import { STATUS_CHIP_CLASS, STATUS_LABEL } from "@/lib/taskStatus";
 import type { Task } from "@/lib/types";
 import TaskCreateModal from "./TaskCreateModal";
 import TaskEditModal from "./TaskEditModal";
@@ -65,17 +67,20 @@ export default function TaskDetailModal({
           <h3 className="text-lg font-semibold text-zinc-900">
             {loading ? "読み込み中..." : task?.title}
             {task && (
-              <span className="ml-2 rounded border border-zinc-300 px-1.5 py-0.5 align-middle text-xs font-normal text-zinc-500">
-                {task.status}
+              <span
+                className={`ml-2 rounded border px-1.5 py-0.5 align-middle text-xs font-semibold ${STATUS_CHIP_CLASS[task.status]}`}
+              >
+                {STATUS_LABEL[task.status]}
               </span>
             )}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-zinc-400 hover:text-zinc-600"
+            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-600"
           >
-            ✕ 閉じる
+            <X className="h-3.5 w-3.5" />
+            閉じる
           </button>
         </div>
 

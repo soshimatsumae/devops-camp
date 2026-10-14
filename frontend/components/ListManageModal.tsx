@@ -1,5 +1,6 @@
 "use client";
 
+import { Pencil, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ApiError, createList, deleteList, listLists, updateList } from "@/lib/api";
 import type { TaskList } from "@/lib/types";
@@ -90,9 +91,10 @@ export default function ListManageModal({
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-zinc-400 hover:text-zinc-600"
+            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-600"
           >
-            ✕ 閉じる
+            <X className="h-3.5 w-3.5" />
+            閉じる
           </button>
         </div>
 
@@ -163,16 +165,18 @@ export default function ListManageModal({
                           setEditingId(l.id);
                           setEditingName(l.name);
                         }}
-                        className="text-sky-700 underline"
+                        className="flex items-center gap-1 text-sky-700 underline"
                       >
-                        ✎ 編集
+                        <Pencil className="h-3 w-3" />
+                        編集
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDelete(l.id)}
-                        className="text-red-700 underline"
+                        className="flex items-center gap-1 text-red-700 underline"
                       >
-                        🗑 削除
+                        <Trash2 className="h-3 w-3" />
+                        削除
                       </button>
                     </div>
                   </>

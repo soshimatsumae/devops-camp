@@ -600,8 +600,11 @@ func (h *TaskHandler) Calendar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// DATE_FORMATでMySQL側から文字列として返す。DATE(...)だけだとMySQLのDATE型になり、
+	// parseTime=trueのドライバ設定下ではGoのtime.Timeとしてスキャンされ、*string変換時に
+	// "2026-10-09"ではなく"2026-10-09T00:00:00Z"(RFC3339)になってしまう。
 	rows, err := h.DB.QueryContext(r.Context(), `
-		SELECT DATE(completed_at) AS d, SUM(actual_hours)
+		SELECT DATE_FORMAT(completed_at, '%Y-%m-%d') AS d, SUM(actual_hours)
 		FROM tasks
 		WHERE user_id = ? AND status = ? AND completed_at IS NOT NULL
 			AND DATE(completed_at) BETWEEN ? AND ?

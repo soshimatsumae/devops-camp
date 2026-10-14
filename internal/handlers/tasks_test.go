@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/smatsumae/devops-camp/internal/handlers"
 )
@@ -320,5 +321,12 @@ func TestTaskCalendar_AggregatesByCompletionDate(t *testing.T) {
 	entry := data[0].(map[string]any)
 	if entry["total_hours"].(float64) != 8 {
 		t.Errorf("total_hours = %v, want 8", entry["total_hours"])
+	}
+	// dateは"2026-10-09"のような日付のみの文字列である必要がある。
+	// MySQLのDATE型をparseTime=true下でstringにスキャンすると、DATE_FORMATで
+	// 明示的に文字列化しない限り"2026-10-09T00:00:00Z"になってしまうバグがあった。
+	wantDate := time.Now().UTC().Format("2006-01-02")
+	if entry["date"].(string) != wantDate {
+		t.Errorf("date = %q, want %q (date-only, no time component)", entry["date"], wantDate)
 	}
 }

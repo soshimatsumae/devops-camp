@@ -1,5 +1,6 @@
 "use client";
 
+import { Folder, Search, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { listLists, listTasks } from "@/lib/api";
 import type { Task, TaskList, TaskSort, TaskStatus } from "@/lib/types";
@@ -119,13 +120,16 @@ export default function TaskListSection({
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <input
-          type="search"
-          placeholder="🔍 キーワードで検索"
-          value={qInput}
-          onChange={(e) => setQInput(e.target.value)}
-          className="min-w-[160px] flex-1 rounded-md border border-zinc-300 px-2 py-1"
-        />
+        <div className="relative min-w-[160px] flex-1">
+          <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+          <input
+            type="search"
+            placeholder="キーワードで検索"
+            value={qInput}
+            onChange={(e) => setQInput(e.target.value)}
+            className="w-full rounded-md border border-zinc-300 py-1 pr-2 pl-7"
+          />
+        </div>
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as TaskStatus | "")}
@@ -152,9 +156,10 @@ export default function TaskListSection({
         <button
           type="button"
           onClick={() => setListManageOpen(true)}
-          className="text-sky-700 underline"
+          className="flex items-center gap-1 text-sky-700 underline"
         >
-          ⚙ リストを管理
+          <Settings className="h-3.5 w-3.5" />
+          リストを管理
         </button>
         <select
           value={sort}
@@ -185,7 +190,7 @@ export default function TaskListSection({
               return (
                 <div key={group.id ?? "unassigned"} className="flex flex-col gap-2">
                   <div className="flex items-center gap-2 text-sm font-semibold text-zinc-600">
-                    {group.id !== null && <span>📁</span>}
+                    {group.id !== null && <Folder className="h-3.5 w-3.5" />}
                     <span>{group.name}</span>
                     <span className="rounded-full border border-zinc-300 px-2 py-0.5 font-mono text-xs text-zinc-500">
                       {groupTasks.length}件

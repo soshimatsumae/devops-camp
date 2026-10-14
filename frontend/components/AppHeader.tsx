@@ -6,8 +6,7 @@ import { logout } from "@/lib/auth";
 // (モーダル表示中は背後のヘッダーを押せないため、docs/SCREEN_FLOW.md参照)。
 export default function AppHeader() {
   return (
-    <header className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3">
-      <span className="text-lg font-semibold text-zinc-900">見積もり振り返り</span>
+    <header className="flex items-center justify-end px-4 pt-2">
       <nav>
         <button
           type="button"

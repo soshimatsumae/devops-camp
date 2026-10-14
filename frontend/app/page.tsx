@@ -15,14 +15,16 @@ export default function DashboardPage() {
 
   return (
     <RequireAuth>
-      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 p-4">
+      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col p-4">
         <AppHeader />
-        <Heatmap />
-        <TaskListSection
-          onCreateClick={() => setCreateModalOpen(true)}
-          onOpenTask={(id) => setOpenTaskId(id)}
-          refreshKey={refreshKey}
-        />
+        <div className="flex flex-col gap-4">
+          <Heatmap />
+          <TaskListSection
+            onCreateClick={() => setCreateModalOpen(true)}
+            onOpenTask={(id) => setOpenTaskId(id)}
+            refreshKey={refreshKey}
+          />
+        </div>
       </div>
 
       {createModalOpen && (
