@@ -10,7 +10,7 @@ Step6の課題ページ([final-challenge/app/step6](https://devopscamp.reheartcl
 - スタイリング: Tailwind CSS v4
 - アイコン: lucide-react(絵文字は使わず、全てアイコンコンポーネントに統一)
 - データ取得: 素の`fetch` + `useState`/`useEffect`(SWR・TanStack Queryのようなライブラリは使わず、学習のしやすさを優先する方針で壁打ちして決定)
-- テスト: 今回は未導入(課題上は任意。型チェック・ESLintを品質担保の中心にしている)
+- 自動テスト(Jest + React Testing Library): 今回は未導入(課題上は任意。フロントエンドの品質担保は型チェック・ESLintを中心にしている。「3. テスト結果」の内容とは別の話)
 
 コードは`frontend/`配下に追加し、バックエンド(Go)とは別のディレクトリ・別の`package.json`で管理している。`frontend/README.md`にセットアップ手順を記載。
 
