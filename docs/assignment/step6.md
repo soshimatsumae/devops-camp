@@ -37,7 +37,39 @@ npm run lint       # ESLint
 npm run build      # 本番ビルド
 ```
 
-<!-- TODO: 上記3コマンドの実行結果(エラー・警告が出ていないこと)を貼る -->
+3コマンドともエラー・警告なしで成功した(`tsc --noEmit`・`eslint`は問題がなければ何も出力しない)。
+
+```
+> frontend@0.1.0 lint
+> eslint
+
+
+> frontend@0.1.0 build
+> next build
+
+▲ Next.js 16.4.0 (Turbopack)
+✓ Running next.config.ts took 1182ms
+
+- Cache Components enabled
+- Partial Prefetching enabled
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1411ms
+  Running TypeScript ...
+  Finished TypeScript in 798ms ...
+  Collecting page data using 7 workers ...
+✓ Generating static pages using 7 workers (6/6) in 185ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /login
+└ ○ /register
+
+
+○  (Static)  prerendered as static content
+```
 
 ### バックエンド
 
@@ -47,10 +79,48 @@ go build ./...
 go test ./...
 
 # 結合テスト(別データベースを使用)
-TEST_MYSQL_DSN="root:<password>@tcp(127.0.0.1:3306)/devops_camp_test?parseTime=true&charset=utf8mb4" go test ./... -v
+TEST_MYSQL_DSN="root:<password>@tcp(127.0.0.1:3306)/devops_camp_test?parseTime=true&charset=utf8mb4" go test -count=1 ./... -v
 ```
 
-<!-- TODO: 上記コマンドの実行結果を貼る -->
+`go vet`・`go build`はエラーなし(問題がなければ何も出力しない)。結合テストは`-count=1`でキャッシュを使わずに実行し、31件すべてPASS(SKIP・FAILなし)。以下は`-v`出力から各テストの結果行を抜き出したもの。
+
+```
+--- PASS: TestGenerateAndParseToken (0.00s)
+--- PASS: TestParseToken_WrongSecret (0.00s)
+--- PASS: TestParseToken_Expired (0.00s)
+--- PASS: TestParseToken_Garbage (0.00s)
+--- PASS: TestRequireAuth_MissingHeader (0.00s)
+--- PASS: TestRequireAuth_ValidToken (0.00s)
+--- PASS: TestRequireAuth_InvalidToken (0.00s)
+--- PASS: TestHashAndCheckPassword (0.15s)
+PASS
+ok  	github.com/smatsumae/devops-camp/internal/auth	0.483s
+--- PASS: TestParseCalendarRange_Default (0.00s)
+--- PASS: TestParseCalendarRange_ExplicitRange (0.00s)
+--- PASS: TestParseCalendarRange_InvalidFormat (0.00s)
+--- PASS: TestParseCalendarRange_FromAfterTo (0.00s)
+--- PASS: TestRegister_Success (0.11s)
+--- PASS: TestRegister_DuplicateEmail (0.12s)
+--- PASS: TestRegister_ShortPassword (0.03s)
+--- PASS: TestLogin_Success (0.11s)
+--- PASS: TestLogin_InvalidCredentials (0.13s)
+--- PASS: TestListLifecycle_CreateUpdateDelete (0.04s)
+--- PASS: TestListDelete_UnsetsTaskListID (0.03s)
+--- PASS: TestTaskCreate_ListIDNotAllowedForChildTask (0.02s)
+--- PASS: TestTaskCreate_InvalidListID (0.02s)
+--- PASS: TestTaskCreate_RequiresEstimatedHours (0.02s)
+--- PASS: TestTaskCreate_EstimatedHoursOutOfRange (0.02s)
+--- PASS: TestTaskCreate_EstimatedHoursAllowsDecimal (0.03s)
+--- PASS: TestTaskCreate_InvalidParentID (0.03s)
+--- PASS: TestTaskLifecycle_CreateGetUpdateDelete (0.03s)
+--- PASS: TestTaskList_KeywordSearch (0.02s)
+--- PASS: TestTaskList_SortByEstimatedHours (0.02s)
+--- PASS: TestTaskList_InvalidSort (0.02s)
+--- PASS: TestTaskGet_OtherUsersTaskNotFound (0.02s)
+--- PASS: TestTaskCalendar_AggregatesByCompletionDate (0.03s)
+PASS
+ok  	github.com/smatsumae/devops-camp/internal/handlers	1.502s
+```
 
 ## 4. 振り返り
 
