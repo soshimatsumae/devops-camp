@@ -55,7 +55,7 @@ export default function TaskTree({
 
   return (
     <details style={{ marginLeft: depth * 28 }} onToggle={handleToggle}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-md border border-zinc-200 px-3 py-2 marker:content-none hover:bg-zinc-50 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-md px-3 py-2 marker:content-none hover:bg-zinc-50 [&::-webkit-details-marker]:hidden">
         <span className="flex items-center gap-2">
           <ChevronRight
             className={`h-4 w-4 shrink-0 text-sky-700 transition-transform duration-150 ${open ? "rotate-90" : ""}`}

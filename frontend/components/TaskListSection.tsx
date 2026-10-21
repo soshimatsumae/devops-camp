@@ -256,12 +256,6 @@ export default function TaskListSection({
         </div>
       )}
 
-      <p className="font-mono text-xs text-zinc-400">
-        {isGrouped
-          ? "「すべて」はlist_idごとにグループ表示(最大100件、ページネーションなし)"
-          : "特定のリスト・「未所属」ではページネーション付きのフラット表示"}
-      </p>
-
       {listManageOpen && (
         <ListManageModal
           onClose={() => setListManageOpen(false)}
