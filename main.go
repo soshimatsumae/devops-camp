@@ -35,6 +35,8 @@ func main() {
 	requireAuth := auth.RequireAuth(cfg.JWTSecret)
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /health", handlers.Health)
+
 	mux.HandleFunc("POST /auth/register", authHandler.Register)
 	mux.HandleFunc("POST /auth/login", authHandler.Login)
 
