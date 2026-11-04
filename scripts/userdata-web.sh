@@ -1,5 +1,5 @@
 #!/bin/bash
-# Next.js用EC2のユーザーデータ。起動テンプレート(web-template)の「ユーザーデータ」に全文を貼り付ける。
+# Next.js用EC2のユーザーデータ。起動テンプレート(smatsumae-devops-camp-web-template)の「ユーザーデータ」に全文を貼り付ける。
 # EC2の初回起動時にrootで1回だけ実行され、出力は /var/log/cloud-init-output.log に残る。
 # 手順: スワップ作成 → Node.jsを入れる → GitHubからコードを取得 → 本番ビルド → systemdで起動
 set -euo pipefail

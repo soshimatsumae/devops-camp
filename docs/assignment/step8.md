@@ -147,6 +147,7 @@ TODO
 - ユーザーデータはGitHubの`main`ブランチからコードを取得するため、`/health`とスクリプトを含むコミットを先にpushしておく
 - DBのパスワードは英数字だけにする(記号が入ると、接続文字列の区切りと混ざるおそれがある)
 - `JWT_SECRET`はターミナルで`openssl rand -hex 32`を実行して作る(ランダムな64文字を表示する)
+- AWSアカウントはほかの参加者と共有しているため、アカウント全体で名前が重複できないリソース(RDS・IAMロール・Parameter Store・ALB・ターゲットグループ・起動テンプレート・Auto Scalingグループ)には`smatsumae-`を付ける。VPCの中のリソース(サブネット・セキュリティグループなど)は`devops-camp-`のままにする
 
 ### 1. VPC(「VPCなど」で一括作成)
 
@@ -160,7 +161,20 @@ TODO
 | NATゲートウェイ | 1つのAZ内(1a) |
 | VPCエンドポイント | なし |
 
-作成後、プライベートサブネットの名前を`app-1a`・`app-1c`・`db-1a`・`db-1c`のように用途がわかる名前に変える。
+作成後、プライベートサブネットの名前を用途がわかる名前に変える。
+
+| 作成時の名前 | 用途 | 変更後の名前 |
+|---|---|---|
+| `devops-camp-subnet-private1-ap-northeast-1a` | APP(Go API) | `devops-camp-app-1a` |
+| `devops-camp-subnet-private2-ap-northeast-1c` | APP(Go API) | `devops-camp-app-1c` |
+| `devops-camp-subnet-private3-ap-northeast-1a` | DB(RDS) | `devops-camp-db-1a` |
+| `devops-camp-subnet-private4-ap-northeast-1c` | DB(RDS) | `devops-camp-db-1c` |
+
+1回目の作成では、ウィザードがNATゲートウェイの段階で失敗し、取り消し(ロールバック)も途中で止まった。VPC・サブネット・インターネットゲートウェイ・パブリック用ルートテーブル・Elastic IPは残ったため、それを使い、足りない部分を手で作った。
+
+- NATゲートウェイ `devops-camp-nat-1a`:`devops-camp-subnet-public1-ap-northeast-1a`に作成し、残っていたElastic IPを割り当てる
+- ルートテーブル `devops-camp-rtb-app`:`0.0.0.0/0`の宛先をNATゲートウェイにし、`devops-camp-app-1a`・`devops-camp-app-1c`に関連付ける
+- DB用サブネットは外へ出ないため、VPCのメインルートテーブル(VPC内の通信だけ)のままにする
 
 ### 2. セキュリティグループ
 
@@ -177,13 +191,16 @@ TODO
 
 | 項目 | 値 |
 |---|---|
-| DBサブネットグループ | `devops-camp-db`(`db-1a`・`db-1c`) |
-| エンジン | MySQL 8.0 |
+| DBサブネットグループ | `smatsumae-devops-camp-db`(`devops-camp-db-1a`・`devops-camp-db-1c`) |
+| DBインスタンス識別子 | `smatsumae-devops-camp-db` |
+| エンジン | MySQL 8.4(8.0は標準サポートが終わり、延長サポートの追加料金がかかるため使わない) |
+| RDS延長サポート | 無効 |
 | テンプレート | 開発/テスト |
-| 可用性 | マルチAZ DBインスタンス |
+| 可用性 | マルチAZ DBインスタンス(2つのインスタンス。3つのインスタンスの「DBクラスター」ではない) |
 | インスタンスクラス | db.t3.micro |
-| ストレージ | gp3 20GB |
+| ストレージ | gp3 20GB、ストレージの自動スケーリングは無効 |
 | マスターユーザー名 | `admin` |
+| 認証情報の管理 | セルフマネージド(Secrets Managerは使わない。パスワードはParameter Storeに入れる) |
 | パブリックアクセス | なし |
 | セキュリティグループ | `db-sg` |
 | 削除保護 | 無効(Step8のあとに削除するため) |
@@ -192,17 +209,17 @@ TODO
 
 | 名前 | 種類 | 値 |
 |---|---|---|
-| `/devops-camp/db-host` | String | RDSのエンドポイント |
-| `/devops-camp/db-user` | String | `admin` |
-| `/devops-camp/db-password` | SecureString | RDSのマスターパスワード |
-| `/devops-camp/jwt-secret` | SecureString | `openssl rand -hex 32`の出力 |
+| `/smatsumae-devops-camp/db-host` | String | RDSのエンドポイント |
+| `/smatsumae-devops-camp/db-user` | String | `admin` |
+| `/smatsumae-devops-camp/db-password` | SecureString | RDSのマスターパスワード |
+| `/smatsumae-devops-camp/jwt-secret` | SecureString | `openssl rand -hex 32`の出力 |
 
 ### 5. IAMロール(信頼されたエンティティ: EC2)
 
 | 名前 | 許可ポリシー |
 |---|---|
-| `devops-camp-api-role` | `AmazonSSMManagedInstanceCore`、および`/devops-camp/*`の`ssm:GetParameter`を許可するインラインポリシー |
-| `devops-camp-web-role` | `AmazonSSMManagedInstanceCore` |
+| `smatsumae-devops-camp-api-role` | `AmazonSSMManagedInstanceCore`、および`/smatsumae-devops-camp/*`の`ssm:GetParameter`を許可するインラインポリシー |
+| `smatsumae-devops-camp-web-role` | `AmazonSSMManagedInstanceCore` |
 
 Go API用インラインポリシー(`<アカウントID>`は自分のAWSアカウントIDに置き換える):
 
@@ -213,7 +230,7 @@ Go API用インラインポリシー(`<アカウントID>`は自分のAWSアカ�
     {
       "Effect": "Allow",
       "Action": "ssm:GetParameter",
-      "Resource": "arn:aws:ssm:ap-northeast-1:<アカウントID>:parameter/devops-camp/*"
+      "Resource": "arn:aws:ssm:ap-northeast-1:<アカウントID>:parameter/smatsumae-devops-camp/*"
     }
   ]
 }
@@ -223,8 +240,8 @@ Go API用インラインポリシー(`<アカウントID>`は自分のAWSアカ�
 
 | 名前 | プロトコル・ポート | ヘルスチェックのパス |
 |---|---|---|
-| `api-tg` | HTTP 8080 | `/health` |
-| `web-tg` | HTTP 3000 | `/` |
+| `smatsumae-devops-camp-api-tg` | HTTP 8080 | `/health` |
+| `smatsumae-devops-camp-web-tg` | HTTP 3000 | `/` |
 
 ヘルスチェックの値は両方とも、間隔30秒・タイムアウト5秒・正常のしきい値2・非正常のしきい値3・成功コード200。
 
@@ -232,32 +249,32 @@ Go API用インラインポリシー(`<アカウントID>`は自分のAWSアカ�
 
 | 項目 | 値 |
 |---|---|
-| 名前 | `devops-camp-alb` |
+| 名前 | `smatsumae-devops-camp-alb` |
 | スキーム | インターネット向け |
 | サブネット | パブリックサブネット2つ |
 | セキュリティグループ | `alb-sg` |
-| リスナー | HTTP 80、デフォルトアクションは`web-tg`へ転送 |
-| ルール | パスが`/health`・`/auth/*`・`/tasks*`・`/lists*`のいずれかなら`api-tg`へ転送 |
+| リスナー | HTTP 80、デフォルトアクションは`smatsumae-devops-camp-web-tg`へ転送 |
+| ルール | パスが`/health`・`/auth/*`・`/tasks*`・`/lists*`のいずれかなら`smatsumae-devops-camp-api-tg`へ転送 |
 
 ### 8. 起動テンプレート
 
-| 項目 | `api-template` | `web-template` |
+| 項目 | `smatsumae-devops-camp-api-template` | `smatsumae-devops-camp-web-template` |
 |---|---|---|
 | AMI | Amazon Linux 2023 | Amazon Linux 2023 |
 | インスタンスタイプ | t3.micro | t3.micro |
 | キーペア | なし(Session Managerで入る) | なし |
 | セキュリティグループ | `api-sg` | `web-sg` |
 | パブリックIPの自動割り当て | 無効 | 有効 |
-| IAMインスタンスプロファイル | `devops-camp-api-role` | `devops-camp-web-role` |
+| IAMインスタンスプロファイル | `smatsumae-devops-camp-api-role` | `smatsumae-devops-camp-web-role` |
 | ユーザーデータ | `scripts/userdata-api.sh`の全文 | `scripts/userdata-web.sh`の全文 |
 
 ### 9. Auto Scalingグループ
 
-| 項目 | `api-asg` | `web-asg` |
+| 項目 | `smatsumae-devops-camp-api-asg` | `smatsumae-devops-camp-web-asg` |
 |---|---|---|
-| 起動テンプレート | `api-template` | `web-template` |
-| サブネット | `app-1a`・`app-1c` | パブリックサブネット2つ |
-| ターゲットグループ | `api-tg` | `web-tg` |
+| 起動テンプレート | `smatsumae-devops-camp-api-template` | `smatsumae-devops-camp-web-template` |
+| サブネット | `devops-camp-app-1a`・`devops-camp-app-1c` | パブリックサブネット2つ |
+| ターゲットグループ | `smatsumae-devops-camp-api-tg` | `smatsumae-devops-camp-web-tg` |
 | ELBのヘルスチェック | 有効 | 有効 |
 | ヘルスチェックの猶予期間 | 600秒 | 900秒 |
 | 台数 | 最小2・希望2・最大4 | 最小2・希望2・最大4 |
@@ -280,7 +297,7 @@ curl -i http://<ALBのDNS名>/health
 
 作成とは逆の順番で消す。前のものが残っていると、次のものが消せないことがある。
 
-1. Auto Scalingグループ(`api-asg`・`web-asg`)。EC2も一緒に終了する
+1. Auto Scalingグループ(`smatsumae-devops-camp-api-asg`・`smatsumae-devops-camp-web-asg`)。EC2も一緒に終了する
 2. 起動テンプレート
 3. ALB
 4. ターゲットグループ
@@ -288,6 +305,6 @@ curl -i http://<ALBのDNS名>/health
 6. NATゲートウェイ。削除が終わってから、NAT用のElastic IPを解放する
 7. VPC(サブネット・ルートテーブル・セキュリティグループ・インターネットゲートウェイも一緒に消える)
 
-Parameter Store(標準のパラメータ)とIAMロールは無料なので、作り直しに備えて残してよい。作り直したときは`/devops-camp/db-host`をRDSの新しいエンドポイントに更新する。
+Parameter Store(標準のパラメータ)とIAMロールは無料なので、作り直しに備えて残してよい。作り直したときは`/smatsumae-devops-camp/db-host`をRDSの新しいエンドポイントに更新する。
 
 削除後、請求ダッシュボードで料金が増えていないことを数日おきに確認する。

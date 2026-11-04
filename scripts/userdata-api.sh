@@ -1,24 +1,27 @@
 #!/bin/bash
-# Go API用EC2のユーザーデータ。起動テンプレート(api-template)の「ユーザーデータ」に全文を貼り付ける。
+# Go API用EC2のユーザーデータ。起動テンプレート(smatsumae-devops-camp-api-template)の「ユーザーデータ」に全文を貼り付ける。
 # EC2の初回起動時にrootで1回だけ実行され、出力は /var/log/cloud-init-output.log に残る。
 # 手順: GitHubからコードを取得 → Goでビルド → Parameter Storeから設定を読む → テーブル作成 → systemdで起動
 #
-# 前提: EC2にIAMロール(devops-camp-api-role)が付いていて、Parameter Storeの /devops-camp/* を読めること。
+# 前提: EC2にIAMロール(smatsumae-devops-camp-api-role)が付いていて、Parameter Storeの /smatsumae-devops-camp/* を読めること。
 # 秘密情報がログに残らないよう、set -x(実行したコマンドの表示)は使わない。
 set -euo pipefail
 
 REGION=ap-northeast-1
 REPO_URL=https://github.com/soshimatsumae/devops-camp.git
 APP_DIR=/opt/devops-camp
-PARAM_PREFIX=/devops-camp
+PARAM_PREFIX=/smatsumae-devops-camp
 DB_NAME=devops_camp
 
 # ユーザーデータの実行時はHOMEが未設定で、Goのビルドキャッシュの置き場所が決まらないため指定する
 export HOME=/root
 
 echo "== install packages"
-# mariadb105 は mysql コマンド(テーブル作成に使う)を含む
-dnf install -y git mariadb105
+# mysqlコマンド(テーブル作成に使う)はMySQL公式のものを入れる。
+# OS標準のmariadb105は、MySQL 8.4の既定の認証方式(caching_sha2_password)で接続できないことがあるため
+dnf install -y git
+dnf install -y https://dev.mysql.com/get/mysql84-community-release-el9-1.noarch.rpm
+dnf install -y mysql-community-client
 
 echo "== clone repository"
 git clone --depth 1 "$REPO_URL" "$APP_DIR"
