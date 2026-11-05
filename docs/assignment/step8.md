@@ -76,9 +76,9 @@ Step8の課題ページ([final-challenge/app/step8](https://devopscamp.reheartcl
 
 #### Step8で検討するTips（任意）
 
-- **秘密情報の管理**：DBのパスワードなどをParameter StoreのSecureStringに保存し、EC2のIAMロールで読み取る。EC2の起動設定（User Data）に秘密情報を書かない。
-- **EC2への接続**：SSHを開けず、Session Manager（`AmazonSSMManagedInstanceCore`）で接続する。
-- **ログの保存**：ALBのアクセスログをS3に保存し、Athenaで検索する。保存期間は30日とする案。今回は、動作確認のあとすぐに環境を削除するため見送った。
+- **秘密情報の管理**：DBのパスワードなどをParameter StoreのSecureStringに保存し、EC2のIAMロールで読み取る。EC2の起動設定（User Data）に秘密情報を書かない。→ **実装した**。DBのパスワードと`JWT_SECRET`を保存し、Go API用EC2のIAMロールだけが読める。
+- **EC2への接続**：SSHを開けず、Session Manager（`AmazonSSMManagedInstanceCore`）で接続する。→ **実装した**。Go API用・Next.js用の両方のIAMロールに付けた。
+- **ログの保存**：ALBのアクセスログをS3に保存し、Athenaで検索する。保存期間は30日とする案。→ **見送った**。動作確認のあとすぐに環境を削除するため。
 
 ## 2. インフラ構成図(構築後)
 
@@ -130,7 +130,8 @@ Step7の設計どおりに構成されていることを、AWSコンソールの
 
 ### 苦労したこと
 
-TODO
+- **コンソールだけで構築したこと**：講座の進め方にならい、AWS CLIなどは使わず、すべてAWSコンソールの画面から構築した。サービスごとに画面を移りながら、同じような設定を何度も入力する必要があった。作り直すときに迷わないよう、入力した値を付録の手順書に残した
+- **各サービスの役割を調べながら進めたこと**：それぞれのサービスがどういうものか、まだ十分に身についておらず、設定項目が出てくるたびに調べる必要があった。たとえばEC2だけでも、`smatsumae-devops-camp-web-template`(Next.js用)と`smatsumae-devops-camp-api-template`(Go API用)の2つがあり、置くサブネット(パブリックかプライベートか)、セキュリティグループ、IAMロール、ユーザーデータがそれぞれ違った。どのサービスがどこに置かれ、どのサービスとつながっているのかを意識しながら設定する必要があり、大変だった
 
 ### 構築した構成のデメリット・リスク
 
