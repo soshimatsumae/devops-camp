@@ -1,18 +1,20 @@
 # ローカルでGo APIとMySQLをまとめて起動する。
+#   準備: cp .env.example .env をして、.env にパスワードなどを入れる
 #   起動: docker compose up -d
 #   停止: docker compose down      (DBのデータは残る)
 #   停止してDBのデータも消す: docker compose down -v
 #
-# ここに書いたパスワード・JWT_SECRETはローカル動作確認専用の値。AWS上ではParameter Storeの値を使う。
+# パスワードなどは .env に書き、このファイルには書かない。.env は2通りの方法で使う。
+#   1. env_file: .env の変数をすべて、そのままコンテナに渡す(dbサービス)
+#   2. ${変数名}: Composeが .env を自動で読み、このファイルの中の ${...} を値に置き換える(apiサービス)
 
 services:
   db:
     image: mysql:8.4
-    environment:
-      MYSQL_ROOT_PASSWORD: local-root-password
-      MYSQL_DATABASE: devops_camp
-      MYSQL_USER: app
-      MYSQL_PASSWORD: local-app-password
+    # MYSQL_ROOT_PASSWORD・MYSQL_DATABASE・MYSQL_USER・MYSQL_PASSWORD を渡す。
+    # JWT_SECRET も渡るが、MySQLは使わない
+    env_file:
+      - .env
     volumes:
       # DBのデータを名前付きボリュームに保存し、コンテナを作り直しても消えないようにする
       - db-data:/var/lib/mysql
@@ -28,10 +30,11 @@ services:
 
   api:
     build: .
+    # APIには env_file を使わず、必要な値だけを渡す。rootのパスワードをAPIに渡さないため
     environment:
       # ホスト名の db はComposeが作るネットワーク内で、上のdbサービスのコンテナを指す
-      MYSQL_DSN: app:local-app-password@tcp(db:3306)/devops_camp?parseTime=true&charset=utf8mb4
-      JWT_SECRET: local-jwt-secret
+      MYSQL_DSN: ${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(db:3306)/${MYSQL_DATABASE}?parseTime=true&charset=utf8mb4
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "8080:8080"
     depends_on:

@@ -25,8 +25,10 @@ Step9の課題ページ([final-challenge/app/step9](https://devopscamp.reheartcl
 | root以外のユーザーで動かす | 実行用の段で専用ユーザー`app`を作り、`USER app`で切り替える。万一アプリが乗っ取られても、コンテナ内でできることを減らすため |
 | ビルドに要らないファイルを送らない | `.dockerignore`で`.git`・`.env`・`docs`・`frontend`などを除き、ビルドを速くし、秘密情報がイメージに入らないようにした |
 | APIにもヘルスチェックを付けた | `/health`を`wget`で確認し、`docker compose ps`でAPIの状態も分かるようにした。実行用のベースを`alpine`にしたため、`wget`がそのまま使える |
+| パスワードを`.env`に分けた | 講座の「実践的な設定」にならい、DBのパスワードと`JWT_SECRET`を`compose.yaml`に書かず、`.env`に置いた。`.env`は`.gitignore`と`.dockerignore`で除外し、GitHubにもイメージにも入らない。必要な変数の一覧は、値を空にした`.env.example`で共有する |
+| APIには必要な値だけを渡す | DBには`env_file`で`.env`の変数をまとめて渡す。APIにも`env_file`を使うと、APIが使わないrootのパスワードまで渡ってしまうため、APIは`${MYSQL_PASSWORD}`のように`compose.yaml`の中で値を差し込み、接続文字列(DSN)と`JWT_SECRET`だけを渡した |
 
-ローカルの動作確認専用の値(DBのパスワード・`JWT_SECRET`)は、講座の例と同じく`compose.yaml`の`environment`に直接書いた。AWS上では、Step8と同じくParameter Storeの値を使う。
+`restart`(再起動ポリシー)と`docker compose watch`(ファイル監視)は、講座で「開発環境では不要」「必要になってから検討する」とされているため、ローカルの動作確認用の今回は使っていない。AWS上では、Step8と同じくParameter Storeの値を使う。
 
 ## 2. 実装コード
 
@@ -34,6 +36,20 @@ Step9の課題ページ([final-challenge/app/step9](https://devopscamp.reheartcl
 - [Dockerfile](../../Dockerfile)(Go API。マルチステージビルド)
 - [compose.yaml](../../compose.yaml)(Go APIとMySQL)
 - [.dockerignore](../../.dockerignore)
+- [.env.example](../../.env.example)(`.env`の見本。値は空にしてある)
+
+起動する前に、`.env.example`をコピーして`.env`を作り、値を入れる。パスワードと`JWT_SECRET`は、次のようにランダムな値で作れる。
+
+```bash
+cat > .env <<EOF
+MYSQL_ROOT_PASSWORD=$(openssl rand -hex 16)
+MYSQL_DATABASE=devops_camp
+MYSQL_USER=app
+MYSQL_PASSWORD=$(openssl rand -hex 16)
+JWT_SECRET=$(openssl rand -hex 32)
+EOF
+docker compose up -d --build
+```
 
 ファイル名は、講座で推奨されている`compose.yaml`にした(課題ページの`docker-compose.yml`と同じ役割)。Goのコード(`go.mod`)がリポジトリ直下にあるため、DockerfileとComposeファイルもリポジトリ直下に置いた。
 
@@ -131,6 +147,59 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +----+--------------------+-----------------+
 ```
 
+### 3-5. `.env`に切り替えたあとの確認
+
+3-1〜3-4は、パスワードを`compose.yaml`に直接書いていたときの結果。`.env`に切り替えたあと、`docker compose down -v`でDBのデータを消してから起動し直し、同じ確認を行った(MySQLがパスワードを設定するのは、データが空の状態で起動したときだけのため)。
+
+切り替える前に受け取ったトークンでタスクを作ろうとすると、`401 Unauthorized`になった。トークンの署名に使う`JWT_SECRET`が`.env`の値に変わったためで、APIが`.env`の値を使っていることが確認できた。
+
+```text
+$ curl -i -X POST http://localhost:8080/tasks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Docker動作確認","estimated_hours":1.5}'
+HTTP/1.1 401 Unauthorized
+
+{"error":{"code":"UNAUTHORIZED","message":"invalid or expired token"}}
+```
+
+ユーザー登録とログインをやり直したあとは、書き込みと読み取りができた。
+
+```text
+$ curl -i -X POST http://localhost:8080/tasks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Docker動作確認","estimated_hours":1.5}'
+HTTP/1.1 201 Created
+
+{"id":1,"parent_id":null,"list_id":null,"title":"Docker動作確認","description":null,"status":"todo","estimated_hours":1.5,"actual_hours":null,"due_date":null,"completed_at":null,"created_at":"2026-11-18T16:58:16Z","updated_at":"2026-11-18T16:58:16Z"}
+```
+
+```text
+$ curl -i http://localhost:8080/tasks -H "Authorization: Bearer $TOKEN"
+HTTP/1.1 200 OK
+
+{"data":[{"id":1,"parent_id":null,"list_id":null,"title":"Docker動作確認","description":null,"status":"todo","estimated_hours":1.5,"actual_hours":null,"due_date":null,"completed_at":null,"created_at":"2026-11-18T16:58:16Z","updated_at":"2026-11-18T16:58:16Z"}],"meta":{"page":1,"per_page":20,"total_count":1,"total_pages":1}}
+```
+
+DBの中身は、コンテナに渡した環境変数(`.env`の値)を使って確認した。パスワードをコマンドに直接書かずに済む。
+
+```text
+$ docker compose exec db sh -c 'mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" --default-character-set=utf8mb4 "$MYSQL_DATABASE" \
+  -e "SELECT id, email, name FROM users; SELECT id, title, estimated_hours FROM tasks;"'
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+------------------+-----------+
+| id | email            | name      |
++----+------------------+-----------+
+|  1 | test@example.com | テスト    |
++----+------------------+-----------+
++----+--------------------+-----------------+
+| id | title              | estimated_hours |
++----+--------------------+-----------------+
+|  1 | Docker動作確認     |             1.5 |
++----+--------------------+-----------------+
+```
+
 ## 4. まとめ
 
 ### 苦労した点
@@ -145,3 +214,4 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 - **マルチステージビルド**：`FROM`を書くたびに新しい段が始まり、最終的なイメージには最後の段だけが残る。ビルドに必要な道具(Goのコンパイラ)と、動かすのに必要なもの(バイナリ)を分けて考えることで、イメージを小さくできる
 - **起動の順番と「準備ができた」ことは別**：`depends_on`はコンテナを起動する順番を決めるだけで、DBが接続を受け付けられる状態になるまでは待たない。ヘルスチェックと`condition: service_healthy`を組み合わせることで、はじめて「準備ができてから起動する」ことができる
 - **Composeのネットワークとボリューム**：Composeは自動でネットワークを作り、その中ではサービス名(`db`)を接続先として使える。DBのデータは名前付きボリュームに置くことで、コンテナを消しても残る。`docker compose down -v`のようにボリュームまで消すと、データも消える
+- **`.env`の2通りの使い方**：`env_file`は`.env`の変数をすべてコンテナに渡し、`${変数名}`は`compose.yaml`の中の値を`.env`の値に置き換える。コンテナごとに、渡す値を必要なものだけに絞れる。また、MySQLの公式イメージがパスワードを設定するのは初回(データが空のとき)だけで、あとから`.env`を変えても、すでにあるDBのパスワードは変わらないことも分かった
