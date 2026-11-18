@@ -12,6 +12,7 @@ Step9の課題ページ([final-challenge/app/step9](https://devopscamp.reheartcl
 - Docker Composeで、Go API(`api`)とMySQL 8.4(`db`)の2つのコンテナを起動する。APIはサービス名の`db`を接続先にして、Composeが自動で作るネットワークの中でDBにつなぐ
 - テーブルは、MySQLの公式イメージの仕組み(初回起動時に`/docker-entrypoint-initdb.d/`のSQLを実行する)を使い、`schema.sql`で作る。Step8のように、手で`mysql`コマンドを実行する必要はない
 - DBのデータは名前付きボリューム(`db-data`)に保存し、コンテナを作り直しても消えないようにした
+- DBのパスワードと`JWT_SECRET`は`compose.yaml`に書かず、Gitの管理から外した`.env`に置く。Composeが`.env`を読み、それぞれのコンテナに必要な値を渡す
 - フロントエンド(Next.js)は今回はコンテナ化していない。課題ではフロントのコンテナ化は任意のため、まず必須のAPIとDBを動かした
 
 ### 工夫した点
