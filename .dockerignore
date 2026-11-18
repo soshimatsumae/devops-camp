@@ -1,0 +1,9 @@
+# docker build のときにDockerへ送らないファイル。
+# Go APIのビルドに要らないものを除き、ビルドを速くし、秘密情報がイメージに入るのを防ぐ
+.git
+.env
+*.log
+docs
+frontend
+scripts
+devops-camp

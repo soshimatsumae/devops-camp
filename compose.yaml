@@ -1,0 +1,48 @@
+# ローカルでGo APIとMySQLをまとめて起動する。
+#   起動: docker compose up -d
+#   停止: docker compose down      (DBのデータは残る)
+#   停止してDBのデータも消す: docker compose down -v
+#
+# ここに書いたパスワード・JWT_SECRETはローカル動作確認専用の値。AWS上ではParameter Storeの値を使う。
+
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: local-root-password
+      MYSQL_DATABASE: devops_camp
+      MYSQL_USER: app
+      MYSQL_PASSWORD: local-app-password
+    volumes:
+      # DBのデータを名前付きボリュームに保存し、コンテナを作り直しても消えないようにする
+      - db-data:/var/lib/mysql
+      # 初回起動時(ボリュームが空のとき)だけ、MySQLの公式イメージがこのフォルダのSQLを実行してテーブルを作る
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      # 初期化中の一時サーバーはネットワークを受け付けないため、127.0.0.1宛てで応答すれば本番の起動が終わっている
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+
+  api:
+    build: .
+    environment:
+      # ホスト名の db はComposeが作るネットワーク内で、上のdbサービスのコンテナを指す
+      MYSQL_DSN: app:local-app-password@tcp(db:3306)/devops_camp?parseTime=true&charset=utf8mb4
+      JWT_SECRET: local-jwt-secret
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        # APIは起動時にDBへ接続できないと終了するため、dbのヘルスチェックが通ってから起動する
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  db-data:
