@@ -1,6 +1,6 @@
 # Step9 課題提出: コンテナ1
 
-Step9の課題ページ([final-challenge/app/step9](https://devopscamp.reheartcloud.com/final-challenge/app/step9))に沿って、Step3のバックエンド(Go)をコンテナ化し、Docker ComposeでGo APIとMySQLをローカルでまとめて起動する。
+Step9の課題ページ([final-challenge/app/step9](https://devopscamp.reheartcloud.com/final-challenge/app/step9))に沿って、Step3のバックエンド(Go)とStep6のフロントエンド(Next.js)をコンテナ化し、Docker ComposeでNext.js・Go API・MySQLの3層をローカルでまとめて起動する。
 
 ## 1. 概要
 
@@ -9,11 +9,13 @@ Step9の課題ページ([final-challenge/app/step9](https://devopscamp.reheartcl
 ### 構成の特徴
 
 - Go APIはマルチステージビルドでイメージを作る。1段目(`golang:1.26.5-alpine`)でビルドし、2段目(`alpine:3.22`)にはできあがったバイナリだけをコピーする。Goのコンパイラやソースコードは最終的なイメージに残らない
-- Docker Composeで、Go API(`api`)とMySQL 8.4(`db`)の2つのコンテナを起動する。APIはサービス名の`db`を接続先にして、Composeが自動で作るネットワークの中でDBにつなぐ
+- Next.jsも同じくマルチステージビルドでイメージを作る。`next.config.ts`の`output: "standalone"`で、ビルド結果のうち動かすのに必要なファイルだけを集め、実行用の段(`node:22.12.0-alpine`)にはそれだけをコピーする
+- Docker Composeで、Next.js(`web`)・Go API(`api`)・MySQL 8.4(`db`)の3つのコンテナを起動する。APIはサービス名の`db`を接続先にして、Composeが自動で作るネットワークの中でDBにつなぐ
+- 画面のJavaScriptはブラウザで動くため、APIへのリクエストは`web`コンテナを経由せず、ブラウザから直接`http://localhost:8080`(`api`コンテナ)へ送る。ブラウザで開くのは`http://localhost:3001`(手元の`npm run dev`が使う3000番とぶつからないようにした)
 - テーブルは、MySQLの公式イメージの仕組み(初回起動時に`/docker-entrypoint-initdb.d/`のSQLを実行する)を使い、`schema.sql`で作る。Step8のように、手で`mysql`コマンドを実行する必要はない
 - DBのデータは名前付きボリューム(`db-data`)に保存し、コンテナを作り直しても消えないようにした
 - DBのパスワードと`JWT_SECRET`は`compose.yaml`に書かず、Gitの管理から外した`.env`に置く。Composeが`.env`を読み、それぞれのコンテナに必要な値を渡す
-- フロントエンド(Next.js)は今回はコンテナ化していない。課題ではフロントのコンテナ化は任意のため、まず必須のAPIとDBを動かした
+- 課題ではフロントのコンテナ化は任意のため、まず必須のAPIとDBを動かして確認し、そのあとNext.jsを追加して3層にした
 
 ### 工夫した点
 
@@ -24,7 +26,8 @@ Step9の課題ページ([final-challenge/app/step9](https://devopscamp.reheartcl
 | 依存ライブラリのダウンロードを先に行う | `go.mod`・`go.sum`だけを先にコピーして`go mod download`を実行する。Dockerは手順の1行ごとに結果をキャッシュするため、コードだけを直したときの再ビルドでは、ダウンロードがキャッシュで済む |
 | イメージのバージョンを固定する | `latest`はビルドする時期によって中身が変わるため、`golang:1.26.5-alpine`(`go.mod`のバージョン)・`alpine:3.22`・`mysql:8.4`(Step8のRDSと同じ)のように固定した |
 | root以外のユーザーで動かす | 実行用の段で専用ユーザー`app`を作り、`USER app`で切り替える。万一アプリが乗っ取られても、コンテナ内でできることを減らすため |
-| ビルドに要らないファイルを送らない | `.dockerignore`で`.git`・`.env`・`docs`・`frontend`などを除き、ビルドを速くし、秘密情報がイメージに入らないようにした |
+| ビルドに要らないファイルを送らない | `.dockerignore`で`.git`・`.env`・`docs`・`frontend`などを除き、ビルドを速くし、秘密情報がイメージに入らないようにした。Next.js用の`frontend/.dockerignore`では、手元の`node_modules`・`.next`を除き、コンテナの中で作り直す |
+| Next.jsのAPIの接続先はビルド時に渡す | `NEXT_PUBLIC_`で始まる環境変数は、実行時ではなくビルド時に画面のJavaScriptへ埋め込まれる。そのため`compose.yaml`の`environment`では渡さず、Dockerfileの`ARG`(ビルド時の値、初期値は`http://localhost:8080`)で渡すようにした。ALBの後ろに置くときは、Step8と同じく空にしてビルドすればよい |
 | APIにもヘルスチェックを付けた | `/health`を`wget`で確認し、`docker compose ps`でAPIの状態も分かるようにした。実行用のベースを`alpine`にしたため、`wget`がそのまま使える |
 | パスワードを`.env`に分けた | 講座の「実践的な設定」にならい、DBのパスワードと`JWT_SECRET`を`compose.yaml`に書かず、`.env`に置いた。`.env`は`.gitignore`と`.dockerignore`で除外し、GitHubにもイメージにも入らない。必要な変数の一覧は、値を空にした`.env.example`で共有する |
 | APIには必要な値だけを渡す | DBには`env_file`で`.env`の変数をまとめて渡す。APIにも`env_file`を使うと、APIが使わないrootのパスワードまで渡ってしまうため、APIは`${MYSQL_PASSWORD}`のように`compose.yaml`の中で値を差し込み、接続文字列(DSN)と`JWT_SECRET`だけを渡した |
@@ -35,8 +38,10 @@ Step9の課題ページ([final-challenge/app/step9](https://devopscamp.reheartcl
 
 - GitHubリポジトリ: <https://github.com/soshimatsumae/devops-camp>
 - [Dockerfile](../../Dockerfile)(Go API。マルチステージビルド)
-- [compose.yaml](../../compose.yaml)(Go APIとMySQL)
-- [.dockerignore](../../.dockerignore)
+- [frontend/Dockerfile](../../frontend/Dockerfile)(Next.js。マルチステージビルド)
+- [compose.yaml](../../compose.yaml)(Next.js・Go API・MySQL)
+- [.dockerignore](../../.dockerignore)・[frontend/.dockerignore](../../frontend/.dockerignore)
+- [frontend/next.config.ts](../../frontend/next.config.ts)(`output: "standalone"`を追加)
 - [.env.example](../../.env.example)(`.env`の見本。値は空にしてある)
 
 起動する前に、`.env.example`をコピーして`.env`を作り、値を入れる。パスワードと`JWT_SECRET`は、次のようにランダムな値で作れる。
@@ -52,7 +57,7 @@ EOF
 docker compose up -d --build
 ```
 
-ファイル名は、講座で推奨されている`compose.yaml`にした(課題ページの`docker-compose.yml`と同じ役割)。Goのコード(`go.mod`)がリポジトリ直下にあるため、DockerfileとComposeファイルもリポジトリ直下に置いた。
+ファイル名は、講座で推奨されている`compose.yaml`にした(課題ページの`docker-compose.yml`と同じ役割)。Goのコード(`go.mod`)がリポジトリ直下にあるため、Go APIのDockerfileとComposeファイルはリポジトリ直下に、Next.jsのDockerfileは`frontend/`に置いた。
 
 ## 3. 動作確認
 
@@ -201,13 +206,25 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 +----+--------------------+-----------------+
 ```
 
+### 3-6. Next.jsを追加した3層での確認
+
+`web`・`api`・`db`の3つのコンテナが起動した。
+
+```text
+$ docker compose ps
+TODO: 実行結果を貼る
+```
+
+ブラウザで`http://localhost:3001`を開き、3-5で登録したユーザーでログインすると、APIで作ったタスク「Docker動作確認」が画面に表示された。
+
+TODO: 画面のスクリーンショット
+
 ## 4. まとめ
 
 ### 苦労した点
 
 - **講座の例との違いを判断すること**：講座のDockerfileは`main.go`だけをコピーしてビルドする簡単な例だったが、このアプリは外部ライブラリ(MySQLドライバなど)を使い、コードも`internal/`に分かれている。講座と同じ書き方でよいところと、このアプリに合わせて変えるべきところ(`go.mod`の先コピー、バージョンの固定など)を1つずつ比べて決める必要があった。ビルドのオプション(`CGO_ENABLED=0`など)は、なくても動くため、講座に合わせてシンプルにした
 - **実行用イメージのベースを選ぶこと**:`distroless`・`alpine`・`scratch`のどれにするかで迷った。小さく安全なのは`distroless`だが、シェルが入っていないためコンテナに入って調べられない。初めてのコンテナ化で、うまく動かないときに中を確認できるほうがよいと考え、`alpine`にした
-- **ターミナルでのつまずき**：手順をコメント付きでまとめて貼り付けたところ、zshでは`#`の行がコメントとして扱われず、`command not found: #`と表示された(コマンド自体は実行されていた)。また、DBのコンテナで`SELECT`すると日本語が`???`と表示され、データが壊れたのかと思った。APIのGETでは正しく返っていたため、表示側の文字コードの問題と分かり、`--default-character-set=utf8mb4`を付けて解決した
 
 ### 学んだこと
 

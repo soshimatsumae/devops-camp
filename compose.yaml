@@ -1,4 +1,4 @@
-# ローカルでGo APIとMySQLをまとめて起動する。
+# ローカルでNext.js(web)・Go API(api)・MySQL(db)の3つをまとめて起動する。
 #   準備: cp .env.example .env をして、.env にパスワードなどを入れる
 #   起動: docker compose up -d
 #   停止: docker compose down      (DBのデータは残る)
@@ -43,6 +43,24 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  web:
+    # frontend/Dockerfile からイメージを作る(.dockerignore も frontend/ のものが使われる)
+    build: ./frontend
+    # Macの3000番は npm run dev(開発サーバー)で使うことがあるため、コンテナは3001番に出す。
+    # Go APIは http://localhost:3001 からのアクセスも許可している(internal/config/config.go)
+    ports:
+      - "3001:3000"
+    # 画面のJavaScriptはブラウザで動き、ブラウザから直接 localhost:8080 のapiへリクエストを送る。
+    # webコンテナからapiへは通信しないが、APIが使える状態になってから画面を出すため、apiのヘルスチェックを待つ
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
       interval: 10s
       timeout: 3s
       retries: 3

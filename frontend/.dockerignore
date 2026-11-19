@@ -1,0 +1,10 @@
+# docker build のときにDockerへ送らないファイル。
+# node_modules と .next はコンテナの中で作り直すため送らない(手元のMac用のものが混ざるのも防ぐ)
+node_modules
+.next
+tsconfig.tsbuildinfo
+# 秘密情報がイメージに入らないようにする
+.env*
+# ビルドに関係ないもの
+.claude
+*.md
