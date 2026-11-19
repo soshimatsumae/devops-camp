@@ -212,8 +212,13 @@ mysql: [Warning] Using a password on the command line interface can be insecure.
 
 ```text
 $ docker compose ps
-TODO: 実行結果を貼る
+NAME                IMAGE             COMMAND                  SERVICE   CREATED              STATUS                        PORTS
+devops-camp-api-1   devops-camp-api   "api"                    api       About a minute ago   Up About a minute (healthy)   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+devops-camp-db-1    mysql:8.4         "docker-entrypoint.s…"   db        About a minute ago   Up About a minute (healthy)   3306/tcp, 33060/tcp
+devops-camp-web-1   devops-camp-web   "docker-entrypoint.s…"   web       About a minute ago   Up 51 seconds (healthy)       0.0.0.0:3001->3000/tcp, [::]:3001->3000/tcp
 ```
+
+`db`には`PORTS`の転送(`0.0.0.0:…->`)がなく、Macからは直接つながらない。DBにつなげるのは、同じネットワークにいる`api`だけになっている。
 
 ブラウザで`http://localhost:3001`を開き、3-5で登録したユーザーでログインすると、APIで作ったタスク「Docker動作確認」が画面に表示された。
 
