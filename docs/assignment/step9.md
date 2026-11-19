@@ -222,8 +222,6 @@ devops-camp-web-1   devops-camp-web   "docker-entrypoint.s…"   web       About
 
 ブラウザで`http://localhost:3001`を開き、3-5で登録したユーザーでログインすると、APIで作ったタスク「Docker動作確認」が画面に表示された。
 
-TODO: 画面のスクリーンショット
-
 ## 4. まとめ
 
 ### 苦労した点
