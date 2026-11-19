@@ -18,7 +18,7 @@ DevOpsキャンプ最終課題として開発する、見積もり振り返り�
 
 ## リポジトリ構成
 
-現時点ではバックエンドのみ。フロントエンド・インフラ関連のコードは対応するStepに進んだ段階で追加していく。
+バックエンド(Go)はリポジトリ直下、フロントエンド(Next.js)は`frontend/`に置いている。
 
 - `main.go` — エントリポイント、ルーティング定義
 - `internal/config` — 環境変数からの設定読み込み
@@ -28,6 +28,11 @@ DevOpsキャンプ最終課題として開発する、見積もり振り返り�
 - `internal/httpx` — JSONレスポンス/エラーレスポンスのヘルパー
 - `internal/handlers` — 各エンドポイントのハンドラ
 - `schema.sql` — テーブル定義(DB仕様書に対応)
+- `frontend/` — フロントエンド(Next.js)。詳しくは[frontend/README.md](./frontend/README.md)
+- `Dockerfile` / `frontend/Dockerfile` — Go API・Next.jsのコンテナイメージの作り方
+- `compose.yaml` / `.env.example` — Docker ComposeでNext.js・Go API・MySQLをまとめて起動する設定と、必要な環境変数の見本
+- `scripts/` — Step8でEC2の起動時に実行したユーザーデータなど
+- `docs/` — 仕様書・設計判断の記録(ADR)・各Stepの提出物・インフラ構成図
 
 各ファイルの詳しい解説は[docs/code-walkthrough/](./docs/code-walkthrough/README.md)を参照。
 
@@ -167,6 +172,57 @@ Step4の課題ページ([final-challenge/app/step4](https://devopscamp.reheartcl
 
 Next.js(App Router)+ TypeScript + Tailwind CSSで`frontend/`配下にフロントエンドを実装した。セットアップ手順は[frontend/README.md](./frontend/README.md)を参照。Step4提出後の画面設計の変更点は[docs/assignment/step5.md](./docs/assignment/step5.md)、実装の詳細・提出物は[docs/assignment/step6.md](./docs/assignment/step6.md)を参照。ワイヤーフレーム・画面フローマップは[docs/design/](./docs/design/README.md)で管理している。
 
-## インフラ・コンテナ・CI/CD (Step 7-11)
+## インフラ (Step 7-8)
 
-未着手。着手時にこのセクションへデプロイ手順・コンテナ起動手順・CI/CDパイプラインの説明を追記する。
+AWSの東京リージョンに、ALB・EC2(Auto Scaling)・RDS for MySQL(Multi-AZ)の構成を設計し、AWSコンソールで構築した。構成図は[docs/infra/architecture.png](./docs/infra/architecture.png)。
+
+- 設計(Step7): [docs/assignment/step7.md](./docs/assignment/step7.md)
+- 構築・動作確認・構築手順(Step8): [docs/assignment/step8.md](./docs/assignment/step8.md)
+
+費用を抑えるため、動作確認のあとに環境は削除している。作り直すときは、step8.mdの付録の手順に沿う。
+
+## コンテナ (Step 9-10)
+
+Go API・Next.js・MySQLをコンテナ化し、Docker Composeでローカルにまとめて起動できるようにした。設計の考え方と動作確認の結果は[docs/assignment/step9.md](./docs/assignment/step9.md)を参照。
+
+| サービス | 中身 | ブラウザ・curlからのアクセス先 |
+|---|---|---|
+| `web` | Next.js | <http://localhost:3001> |
+| `api` | Go API | <http://localhost:8080> |
+| `db` | MySQL 8.4 | Macからは直接つながらない(`api`からだけ接続する) |
+
+### 起動手順
+
+前提: Docker Desktopが起動していること。
+
+1. `.env`(パスワードなどを書く設定ファイル。Gitの管理対象外)を作る。パスワードと`JWT_SECRET`はランダムな値にする
+
+   ```bash
+   cat > .env <<EOF
+   MYSQL_ROOT_PASSWORD=$(openssl rand -hex 16)
+   MYSQL_DATABASE=devops_camp
+   MYSQL_USER=app
+   MYSQL_PASSWORD=$(openssl rand -hex 16)
+   JWT_SECRET=$(openssl rand -hex 32)
+   EOF
+   ```
+
+2. イメージを作って、3つのコンテナをバックグラウンドで起動する(初回はNext.jsのビルドで数分かかる)
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+3. 3つのコンテナがすべて`healthy`になったことを確認し、ブラウザで<http://localhost:3001>を開く
+
+   ```bash
+   docker compose ps
+   ```
+
+停止は`docker compose down`(DBのデータは残る)。`docker compose down -v`はDBのデータも消すため、`.env`のパスワードを変えたときなど、DBを作り直したいときだけ使う。
+
+Step10(コンテナでの運用への移行)は未着手。
+
+## CI/CD (Step 11)
+
+未着手。
